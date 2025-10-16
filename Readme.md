@@ -32,8 +32,8 @@ This repository contains a master’s thesis developing a comprehensive tool for
 ## Author information
 
  * Name: Silvia Šlachtovská 
- * Phone:
- * Email:
+ * Phone: +421 944936670
+ * Email: silviaslachtovska@gmail.com
  * Data: 2025/2026
 
 
