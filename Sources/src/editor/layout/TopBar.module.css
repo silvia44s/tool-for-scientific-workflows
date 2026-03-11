@@ -1,0 +1,205 @@
+/**
+ * @file TopBar.module.css
+ * @brief Styles for the top bar component.
+ * @author Silvia Šlachtovská
+ *.
+ */
+
+.root {
+  position: absolute;
+  top: 18px;
+  right: 30px; 
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+}
+
+.btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: none;
+
+  background: #E0E0FF;
+  color: #573A70;
+
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.btn:hover {
+  background: #afafd4;
+}
+
+.runBtn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: none;
+
+  background: #C1EFAF;
+  color: #295020;
+
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.runBtn:hover {
+  background: rgb(172, 237, 146);
+}
+
+.iconBtn {
+  width: 38px;
+  height: 36px;
+  border-radius: 10px;
+
+  background: rgb(147, 0, 10, 0.30);
+  border: none;
+
+  display: grid;
+  place-items: center;
+  color: #93000A;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.iconBtn:hover {
+  background: rgb(147, 0, 10, 0.50);
+}
+
+.iconBtnArrow {
+  width: 38px;
+  height: 36px;
+  border-radius: 10px;
+
+  background: #565992;
+
+  display: grid;
+  place-items: center;
+  border: none;
+
+  color: #E0E0FF;
+
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.iconBtnArrow:hover {
+  background: #414477;
+}
+
+.icon {
+  width: 19px;
+  height: 19px;
+  stroke-width: 2;
+}
+
+.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hiddenFile {
+  display: none;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 30, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modalCard {
+  width: min(720px, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  background: #f6f4ff;
+  color: #1b1d3b;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(90, 90, 140, 0.15);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid rgba(90, 90, 140, 0.12);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modalCloseBtn {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+  color: #44476a;
+}
+
+.modalBody {
+  padding: 16px 20px;
+}
+
+.modalMessage {
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.modalMeta {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.modalSectionLabel {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #4f5378;
+}
+
+.modalPre {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #ece9ff;
+  color: #2e245c;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 20px 18px;
+}
+
+.modalOkBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: #11144b;
+  color: #f1dbff;
+  font-weight: 600;
+}

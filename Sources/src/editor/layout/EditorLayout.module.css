@@ -1,0 +1,32 @@
+/**
+ * @file EditorLayout.module.css
+ * @brief Styles for the main editor layout.
+ * @author Silvia Šlachtovská
+ *.
+ */
+
+.root {
+  height: 100vh;
+  display: flex;
+  min-height: 0;
+}
+
+.left {
+  min-width: 260px;
+  border-right: 1px solid #C1EFAF;
+  overflow: auto;
+  background-color: #11144B;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.center {
+  flex: 1;
+  min-width: 1200px;
+  min-height: 0;
+}
+
+.right {
+  min-width: 290px;
+  border-left: 1px solid #C1EFAF;
+  overflow: hidden;
+}

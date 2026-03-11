@@ -1,0 +1,100 @@
+/**
+ * @file LeftPanel.module.css
+ * @brief Styles for the left panel component.
+ * @author Silvia Šlachtovská
+ *.
+ */
+
+
+.root {
+  /*height: 80%;*/
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px;
+  background: #11144B;
+  color: #e5e7eb;
+}
+
+.headerIcon {
+  width: 34px;
+  height: 22px;
+  border: 2px solid rgba(193, 239, 175, 0.75);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+}
+
+.iconBox {
+  width: 16px;
+  height: 10px;
+  border: 2px solid rgba(193, 239, 175, 0.75);
+  border-radius: 3px;
+}
+
+.nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  padding-bottom: 20px;
+  align-items: center;
+}
+
+.nodeCard {
+  width: 180px;
+  height: 70px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #11144B;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.35);
+  border: 1px solid rgba(0,0,0,0.12);
+}
+
+.nodeCard:active {
+  cursor: grabbing;
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  padding-top: 22px;
+}
+
+.fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: transparent;
+  border: 2px solid rgba(193, 239, 175, 0.85);
+  color: rgba(193, 239, 175, 0.95);
+  font-size: 30px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.25);
+  display: grid;
+  place-items: center;
+}
+
+.fab:hover {
+  background: rgba(193, 239, 175, 0.1);
+}
+
+.nodeCardButton {
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  color: rgba(193, 239, 175, 0.95);
+  font-weight: 520;
+  font-size: 15px;
+  background: transparent ;
+  padding: 12px 14px;
+}
+
+.hiddenFile {
+  display: none;
+}
