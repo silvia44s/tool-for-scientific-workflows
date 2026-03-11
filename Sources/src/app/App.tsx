@@ -1,12 +1,5 @@
-import ReactFlow from 'reactflow';
-import 'reactflow/dist/style.css';
+import { EditorPage } from '../editor/EditorPage';
 
-function App() {
-  return (
-    <div style={{ width: '100vw', height: '100vh' }}>
-      <ReactFlow />
-    </div>
-  );
+export default function App() {
+  return <EditorPage />;
 }
-
-export default App;

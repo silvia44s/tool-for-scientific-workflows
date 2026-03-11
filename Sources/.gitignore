@@ -24,3 +24,15 @@ dist-ssr
 *.sw?
 .vite
 .vite/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Backend runtime
+backend/runs/
+
+# Tests
+backend/tests/
+*.egg-info/
