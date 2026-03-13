@@ -59,7 +59,8 @@ type Action =
   | { type: 'task/libraryRemove'; nodeId: string; index: number }
   | { type: 'workflow/replace'; workflow: Workflow }
   | { type: 'node/remove'; nodeId: string }
-  | { type: 'node/addPresetNode'; node: WorkflowNode };
+  | { type: 'node/addPresetNode'; node: WorkflowNode }
+  | { type: 'workflow/setBackend'; backend: 'local' | 'slurm' | 'pbs' };
 
 
 /**
@@ -113,11 +114,24 @@ function reducer(state: State, action: Action): State {
           run: {
             ...(state.workflow.run ?? {}),
             resultsRoot: action.resultsRoot,
+            backend: state.workflow.run?.backend || 'local',
           },
         },
       };
     }
 
+    case 'workflow/setBackend': {
+      return {
+        ...state,
+        workflow: {
+          ...state.workflow,
+          run: {
+            ...state.workflow.run,
+            backend: action.backend,
+          },
+        },
+      };
+    }
     case 'selection/set': {
       return { ...state, selectedNodeId: action.nodeId, selectedEdgeId: null, };
     }
@@ -138,7 +152,7 @@ function reducer(state: State, action: Action): State {
           params: [],
           environment: { variables: [], modules: [], libraries: [] },
           io: { inputs: [], outputs: [] },
-          batch: { backend: 'local', array: { enabled: false } },
+          batch: { array: { enabled: false } },
           },
       };
       const nodeSynced = syncPortsForTask(node);

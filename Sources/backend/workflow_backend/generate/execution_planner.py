@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from workflow_backend.models import WorkflowDoc, TaskNode, WorkflowEdge, IOPort, TaskParam
+from workflow_backend.models import WorkflowDoc, TaskNode, WorkflowEdge, IOPort, TaskParam, BatchConfig
 
 
 # -----------------------------
@@ -48,6 +48,9 @@ class ExecutionStep:
     # resolved outputs: port_id -> path/value
     outputs: Dict[str, str]
 
+    batch: BatchConfig
+    dependencies: List[str]
+
 
 @dataclass(frozen=True)
 class ExecutionPlan:
@@ -57,6 +60,7 @@ class ExecutionPlan:
     """
     workflow_id: str
     workflow_name: str
+    workflow_backend: str
     results_root: Optional[str]
     steps: List[ExecutionStep]
 
@@ -286,11 +290,21 @@ def _build_argv(
         if val == "":
             continue
 
-        argv.append(flag)
-        argv.append(val)
+        if flag.endswith("="):
+            argv.append(f"{flag}{val}")
+        else:
+            argv.append(flag)
+            argv.append(val)
 
     return argv
 
+
+def _dependencies_for_node(wf: WorkflowDoc, node_id: str) -> List[str]:
+    deps = []
+    for e in wf.edges.values():
+        if e.target == node_id and e.source != node_id:
+            deps.append(e.source)
+    return sorted(set(deps))
 
 # -----------------------------
 # Public API
@@ -359,12 +373,17 @@ def build_execution_plan(wf: WorkflowDoc, ordered_task_ids: List[str]) -> Execut
                 library_paths=libs,
                 argv=_build_argv(task, resolved_param_values),
                 outputs=outputs,
+                batch=task.task.batch,
+                dependencies=_dependencies_for_node(wf, node_id),
             )
         )
+
+    workflow_backend = getattr(getattr(wf, "run", None), "backend", "local")
 
     return ExecutionPlan(
         workflow_id=wf.id,
         workflow_name=wf.name,
+        workflow_backend=workflow_backend,
         results_root=results_root,
         steps=steps,
     )
