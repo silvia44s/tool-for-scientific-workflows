@@ -192,6 +192,7 @@
   display: flex;
   justify-content: flex-end;
   padding: 12px 20px 18px;
+  gap: 10px;
 }
 
 .modalOkBtn {
@@ -202,4 +203,22 @@
   background: #11144b;
   color: #f1dbff;
   font-weight: 600;
+}
+
+.modalOkBtn:hover {
+  background: #04051a;
+}
+
+.modalClsBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: #951f1f;
+  color: #f1dbff;
+  font-weight: 600;
+}
+
+.modalClsBtn:hover {
+  background: #5c0f0f;
 }

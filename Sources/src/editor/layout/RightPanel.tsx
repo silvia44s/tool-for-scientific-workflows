@@ -19,7 +19,7 @@
 import { useState } from 'react';
 import styles from './RightPanel.module.css';
 import { useWorkflowState } from '../state/workflowState';
-import type { WorkflowNode, ParamKind, TaskParam } from '../state/model';
+import type { WorkflowNode, ParamKind, TaskParam, Workflow } from '../state/model';
 import type { EnvVar } from '../state/model';
 import { buildTaskPreset } from '../state/nodePresets';
 
@@ -30,6 +30,10 @@ import { XMarkIcon, CheckIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/o
  */
 type TabKey = 'json' | 'properties';
 
+/**
+ * Parameter role determines how a parameter is exposed in the task.
+ */
+//type ParamRole = 'local' | 'input' | 'output';
 
 /**
  * Main right sidebar component.
@@ -79,6 +83,8 @@ export function RightPanel() {
  */
 function PropertiesView() {
   const { state, dispatch } = useWorkflowState();
+
+  const workflowBackend = state.workflow.run?.backend ?? 'local';
 
   const selected = state.selectedNodeId
     ? state.workflow.nodes[state.selectedNodeId]
@@ -144,7 +150,7 @@ function PropertiesView() {
       ? selected.task.params.filter((p) => !p.exposeAsInput && !p.exposeAsOutput)
       : [];
 
-  const inputParams =
+  /*const inputParams =
     selected && selected.type === 'task'
       ? selected.task.params.filter((p) => p.exposeAsInput)
       : [];
@@ -152,7 +158,7 @@ function PropertiesView() {
   const outputParams =
     selected && selected.type === 'task'
       ? selected.task.params.filter((p) => p.exposeAsOutput)
-      : [];
+      : [];*/
 
 
   /**
@@ -174,7 +180,7 @@ function PropertiesView() {
   /**
    * Open draft editor for a new input parameter.
    */
-  function openNewInput(kind: ParamKind, nodeId: string) {
+  /*function openNewInput(kind: ParamKind, nodeId: string) {
     const node = state.workflow.nodes[nodeId];
     if (!node || node.type !== 'task') return;
 
@@ -184,13 +190,13 @@ function PropertiesView() {
       exposeAsInput: true,
       exposeAsOutput: false,
     });
-  }
+  }*/
 
 
   /**
    * Open draft editor for a new output parameter.
    */
-  function openNewOutput(kind: ParamKind, nodeId: string) {
+  /*function openNewOutput(kind: ParamKind, nodeId: string) {
     const node = state.workflow.nodes[nodeId];
     if (!node || node.type !== 'task') return;
 
@@ -200,7 +206,7 @@ function PropertiesView() {
       exposeAsInput: false,
       exposeAsOutput: true,
     });
-  }
+  }*/
 
 
   /**
@@ -311,6 +317,24 @@ function PropertiesView() {
     cancelVarDraft();
   }
 
+  /**
+   * 
+   * @param p Task parameter to determine the role for.
+   * @returns role.
+   */
+  function getParamRole(p: TaskParam): 'local' | 'input' | 'output' {
+    if (p.exposeAsInput) return 'input';
+    if (p.exposeAsOutput) return 'output';
+    return 'local';
+  }
+
+  const allParams =
+  selected && selected.type === 'task'
+    ? selected.task.params
+    : [];
+
+
+
 
   /**
    * If no node is selected, show workflow-level settings only.
@@ -338,6 +362,26 @@ function PropertiesView() {
           <div className={styles.hintText}>
             Default folder where outputs will be generated/saved during RUN
           </div>
+          <label className={styles.field}>
+          <span className={styles.fieldLabel}>backend</span>
+          <select
+            className={styles.select}
+            value={state.workflow.run?.backend ?? 'local'}
+            onChange={(e) =>
+              dispatch({
+                type: 'workflow/setBackend',
+                backend: e.target.value as 'local' | 'slurm' | 'pbs',
+              })
+            }
+          >
+            <option value="local">local</option>
+            <option value="slurm">slurm</option>
+            <option value="pbs">pbs</option>
+          </select>
+        </label>
+        <div className={styles.hintText}>
+          Execution backend used to run the entire workflow.
+        </div>
         </section>
 
         <div className={styles.placeholder}>
@@ -401,36 +445,132 @@ function PropertiesView() {
           {/* ---------------- PARAMETERS / IO ---------------- */}
           <section className={styles.section}>
 
-            {/* Regular task parameters not exposed as ports */}
             <div className={styles.section}>
               <div className={styles.sectionHeader}>
                 <SectionTitle>Parameters</SectionTitle>
               </div>
 
-              {regularParams.length > 0 && (
+              {allParams.length > 0 && (
                 <div className={styles.paramList}>
-                  {regularParams.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={styles.paramChip}
-                      onClick={() => openEdit(p)}
-                      title="Click to edit"
-                    >
-                      <span className={styles.paramChipName}>{p.name}</span>
-                      <span className={styles.paramChipSep}>:</span>
-                      <span className={styles.paramChipValue}>
-                        {p.kind === 'bool'
-                          ? p.value === 'false'
-                            ? 'false'
-                            : 'true'
-                          : p.value || '(empty)'}
-                      </span>
-                    </button>
-                  ))}
+                  {allParams.map((p) => {
+                    const role = getParamRole(p);
+                    const displayValue = getParamDisplayValue(selected.id, p, state.workflow);
+
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`${styles.paramChip} ${styles['paramChip_' + role]}`}
+                        onClick={() => openEdit(p)}
+                        title="Click to edit"
+                      >
+                        <span className={styles.paramChipName}>{p.name}</span>
+                        <span className={styles.paramChipType}> ({p.kind})</span>
+                        <span className={styles.paramChipSep}>:</span>
+                        <span className={styles.paramChipValue}>{displayValue}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
+                          {/* Draft editor card for adding/editing a parameter */}
+                  {draftParam && (
+                    <div className={styles.paramEditorCard}>
+                      <div className={styles.paramEditorHeader}>
+                        <div className={styles.paramEditorTitle}>{draftParam.kind}</div>
 
+                        <div className={styles.paramEditorActions}>
+                          <button
+                            type="button"
+                            className={styles.iconBtnDelete}
+                            onClick={() => {
+                              if (editingParamId) {
+                                dispatch({
+                                  type: 'task/paramRemove',
+                                  nodeId: selected.id,
+                                  paramId: editingParamId,
+                                });
+                              }
+                              cancelDraft();
+                            }}
+                            title="Delete parameter"
+                          >
+                            <TrashIcon className="icon_trash" />
+                          </button>
+
+                          <button
+                            type="button"
+                            className={styles.iconBtnOk}
+                            onClick={() => saveDraft(selected.id)}
+                            title="Save"
+                          >
+                            <CheckIcon className="icon_check" />
+                          </button>
+
+                          <button
+                            type="button"
+                            className={styles.iconBtnCancel}
+                            onClick={cancelDraft}
+                            title="Cancel"
+                          >
+                            <XMarkIcon className="icon_x" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={styles.paramEditorBody}>
+                        <LabeledInput
+                          label="name"
+                          value={draftParam.name}
+                          onChange={(v) => setDraftParam({ ...draftParam, name: v })}
+                        />
+
+                        <LabeledInput
+                          label="flag"
+                          value={draftParam.flag ?? ''}
+                          onChange={(v) => setDraftParam({ ...draftParam, flag: v })}
+                        />
+
+                        {draftParam.kind === 'bool' ? (
+                          <BoolSelect
+                            label="value"
+                            value={draftParam.value}
+                            onChange={(v) => setDraftParam({ ...draftParam, value: v })}
+                          />
+                        ) : (
+                          <LabeledInput
+                            label="value"
+                            value={draftParam.value}
+                            onChange={(v) => setDraftParam({ ...draftParam, value: v })}
+                          />
+                        )}
+
+                        {draftParam.kind === 'choice' && (
+                          <LabeledInput
+                            label="options (comma separated)"
+                            value={(draftParam.options ?? []).join(',')}
+                            onChange={(v) =>
+                              setDraftParam({
+                                ...draftParam,
+                                options: v.split(',').map((s) => s.trim()).filter(Boolean),
+                              })
+                            }
+                          />
+                        )}
+                        <RoleSelect
+                          label="role"
+                          value={getParamRole(draftParam)}
+                          onChange={(role) =>
+                            setDraftParam({
+                              ...draftParam,
+                              exposeAsInput: role === 'input',
+                              exposeAsOutput: role === 'output',
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
               <div className={styles.addParamRow}>
                 <AddParamButton onClick={() => openNewRegular('string', selected.id)}>
                   <PlusIcon className={styles.iconPlus} /> string
@@ -444,184 +584,21 @@ function PropertiesView() {
                 <AddParamButton onClick={() => openNewRegular('choice', selected.id)}>
                   <PlusIcon className={styles.iconPlus} /> choice
                 </AddParamButton>
+                <AddParamButton onClick={() => openNewRegular('file', selected.id)}>
+                  <PlusIcon className={styles.iconPlus} /> file
+                </AddParamButton>
+                <AddParamButton onClick={() => openNewRegular('directory', selected.id)}>
+                  <PlusIcon className={styles.iconPlus} /> directory
+                </AddParamButton>
               </div>
+
+
 
               {regularParams.length === 0 && !draftParam && (
                 <div className={styles.hintText}>No parameters yet.</div>
               )}
             </div>
 
-            {/* Input parameters exposed as input ports */}
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <SectionTitle>Inputs</SectionTitle>
-              </div>
-
-              {inputParams.length > 0 && (
-                <div className={styles.paramList}>
-                  {inputParams.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={styles.paramChip}
-                      onClick={() => openEdit(p)}
-                      title="Click to edit"
-                    >
-                      <span className={styles.paramChipName}>{p.name}</span>
-                      <span className={styles.paramChipSep}>:</span>
-                      <span className={styles.paramChipValue}>
-                        {p.value || '(connected / empty)'}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className={styles.addParamRow}>
-                <AddParamButton onClick={() => openNewInput('file', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> file input
-                </AddParamButton>
-                <AddParamButton onClick={() => openNewInput('directory', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> dir input
-                </AddParamButton>
-                <AddParamButton onClick={() => openNewInput('string', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> string input
-                </AddParamButton>
-                <AddParamButton onClick={() => openNewInput('number', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> number input
-                </AddParamButton>
-              </div>
-            </div>
-
-            {/* Output parameters exposed as output ports */}
-            <div className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <SectionTitle>Outputs</SectionTitle>
-              </div>
-
-              {outputParams.length > 0 && (
-                <div className={styles.paramList}>
-                  {outputParams.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={styles.paramChip}
-                      onClick={() => openEdit(p)}
-                      title="Click to edit"
-                    >
-                      <span className={styles.paramChipName}>{p.name}</span>
-                      <span className={styles.paramChipSep}>:</span>
-                      <span className={styles.paramChipValue}>
-                        {p.value || '(auto path / empty)'}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className={styles.addParamRow}>
-                <AddParamButton onClick={() => openNewOutput('file', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> file output
-                </AddParamButton>
-                <AddParamButton onClick={() => openNewOutput('directory', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> dir output
-                </AddParamButton>
-                <AddParamButton onClick={() => openNewOutput('string', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> string output
-                </AddParamButton>
-                <AddParamButton onClick={() => openNewOutput('number', selected.id)}>
-                  <PlusIcon className={styles.iconPlus} /> number output
-                </AddParamButton>
-              </div>
-            </div>
-
-            {/* Draft editor card for adding/editing a parameter */}
-            {draftParam && (
-              <div className={styles.paramEditorCard}>
-                <div className={styles.paramEditorHeader}>
-                  <div className={styles.paramEditorTitle}>{draftParam.kind}</div>
-
-                  <div className={styles.paramEditorActions}>
-                    <button
-                      type="button"
-                      className={styles.iconBtnDelete}
-                      onClick={() => {
-                        if (editingParamId) {
-                          dispatch({
-                            type: 'task/paramRemove',
-                            nodeId: selected.id,
-                            paramId: editingParamId,
-                          });
-                        }
-                        cancelDraft();
-                      }}
-                      title="Delete parameter"
-                    >
-                      <TrashIcon className="icon_trash" />
-                    </button>
-
-                    <button
-                      type="button"
-                      className={styles.iconBtnOk}
-                      onClick={() => saveDraft(selected.id)}
-                      title="Save"
-                    >
-                      <CheckIcon className="icon_check" />
-                    </button>
-
-                    <button
-                      type="button"
-                      className={styles.iconBtnCancel}
-                      onClick={cancelDraft}
-                      title="Cancel"
-                    >
-                      <XMarkIcon className="icon_x" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className={styles.paramEditorBody}>
-                  <LabeledInput
-                    label="name"
-                    value={draftParam.name}
-                    onChange={(v) => setDraftParam({ ...draftParam, name: v })}
-                  />
-
-                  <LabeledInput
-                    label="flag"
-                    value={draftParam.flag ?? ''}
-                    onChange={(v) => setDraftParam({ ...draftParam, flag: v })}
-                  />
-
-                  {draftParam.kind === 'bool' ? (
-                    <BoolSelect
-                      label="value"
-                      value={draftParam.value}
-                      onChange={(v) => setDraftParam({ ...draftParam, value: v })}
-                    />
-                  ) : (
-                    <LabeledInput
-                      label="value"
-                      value={draftParam.value}
-                      onChange={(v) => setDraftParam({ ...draftParam, value: v })}
-                    />
-                  )}
-
-                  {draftParam.kind === 'choice' && (
-                    <LabeledInput
-                      label="options (comma separated)"
-                      value={(draftParam.options ?? []).join(',')}
-                      onChange={(v) =>
-                        setDraftParam({
-                          ...draftParam,
-                          options: v.split(',').map((s) => s.trim()).filter(Boolean),
-                        })
-                      }
-                    />
-                  )}
-                </div>
-              </div>
-            )}
           </section>
 
           {/* ---------------- ENVIRONMENT ---------------- */}
@@ -725,38 +702,12 @@ function PropertiesView() {
 
           {/* ---------------- BATCH ---------------- */}
           <section className={styles.section}>
-            <div className={styles.sectionHeader}>
-              <SectionTitle>Batch</SectionTitle>
-            </div>
 
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>backend</span>
-              <select
-                className={styles.select}
-                value={selected.task.batch.backend}
-                onChange={(e) => {
-                  const backend = e.target.value as 'local' | 'slurm' | 'pbs';
-                  const patch = {
-                    task: {
-                      ...selected.task,
-                      batch: {
-                        ...selected.task.batch,
-                        backend,
-                        array: { ...(selected.task.batch.array ?? { enabled: false }), enabled: false },
-                      },
-                    },
-                  } as Partial<WorkflowNode>;
-                  dispatch({ type: 'node/update', nodeId: selected.id, patch });
-                }}
-              >
-                <option value="local">local</option>
-                <option value="slurm">slurm</option>
-                <option value="pbs">pbs</option>
-              </select>
-            </label>
-
-            {selected.task.batch.backend !== 'local' && (
+            {workflowBackend !== 'local' && (
               <>
+            <div className={styles.sectionHeader}>
+              <SectionTitle> {workflowBackend} </SectionTitle>
+            </div>
                 <div className={styles.grid2}>
                   <NumberInput
                     label="cpus"
@@ -792,7 +743,7 @@ function PropertiesView() {
                   />
 
                   <LabeledInput
-                    label={selected.task.batch.backend === 'slurm' ? 'partition' : 'queue'}
+                    label={workflowBackend === 'slurm' ? 'partition' : 'queue'}
                     value={selected.task.batch.partitionOrQueue ?? ''}
                     onChange={(v) => {
                       const patch = {
@@ -825,23 +776,63 @@ function PropertiesView() {
                   />
                 </div>
 
-                <TextAreaInput
-                  label="custom (slurm / pbs)"
-                  value={selected.task.batch.custom ?? ''}
-                  onChange={(v) => {
-                    const patch = {
-                      task: {
-                        ...selected.task,
-                        batch: {
-                          ...selected.task.batch,
-                          custom: v,
-                        },
+              <TextAreaInput
+                label={`custom ${workflowBackend} directives`}
+                value={selected.task.batch.customDirectives ?? selected.task.batch.custom ?? ''}
+                onChange={(v) => {
+                  const patch = {
+                    task: {
+                      ...selected.task,
+                      batch: {
+                        ...selected.task.batch,
+                        customDirectives: v,
                       },
-                    } as Partial<WorkflowNode>;
-                    dispatch({ type: 'node/update', nodeId: selected.id, patch });
-                  }}
-                  placeholder={`# custom commands`}
-                />
+                    },
+                  } as Partial<WorkflowNode>;
+                  dispatch({ type: 'node/update', nodeId: selected.id, patch });
+                }}
+                placeholder={
+                  workflowBackend === 'slurm'
+                    ? '-G 1\n--constraint=zen3'
+                    : '-l place=free'
+                }
+              />
+
+              <TextAreaInput
+                label="prologue script"
+                value={selected.task.batch.prologue ?? ''}
+                onChange={(v) => {
+                  const patch = {
+                    task: {
+                      ...selected.task,
+                      batch: {
+                        ...selected.task.batch,
+                        prologue: v,
+                      },
+                    },
+                  } as Partial<WorkflowNode>;
+                  dispatch({ type: 'node/update', nodeId: selected.id, patch });
+                }}
+                placeholder={`# commands before main task\nml purge\nml GCC/9.3.0`}
+              />
+
+              <TextAreaInput
+                label="epilogue script"
+                value={selected.task.batch.epilogue ?? ''}
+                onChange={(v) => {
+                  const patch = {
+                    task: {
+                      ...selected.task,
+                      batch: {
+                        ...selected.task.batch,
+                        epilogue: v,
+                      },
+                    },
+                  } as Partial<WorkflowNode>;
+                  dispatch({ type: 'node/update', nodeId: selected.id, patch });
+                }}
+                placeholder={`# commands after main task`}
+              />
 
                 {/* Array job settings */}
                 <div className={styles.arrayBox}>
@@ -1164,4 +1155,78 @@ function downloadJson(filename: string, data: unknown) {
   a.click();
 
   URL.revokeObjectURL(url);
+}
+
+function getParamRole(p: TaskParam): 'local' | 'input' | 'output' {
+  if (p.exposeAsInput) return 'input';
+  if (p.exposeAsOutput) return 'output';
+  return 'local';
+}
+function isInputConnected(
+  nodeId: string,
+  paramId: string,
+  workflow: Workflow
+): boolean {
+  const node = workflow.nodes[nodeId];
+  if (!node || node.type !== 'task') return false;
+
+  const inputPort = node.task.io.inputs.find(
+    (port) => port.inputBind?.kind === 'param' && port.inputBind.paramId === paramId
+  );
+
+  if (!inputPort) return false;
+
+  return Object.values(workflow.edges).some(
+    (e) => e.target === nodeId && e.targetHandle === inputPort.id
+  );
+}
+
+function getParamDisplayValue(
+  nodeId: string,
+  p: TaskParam,
+  workflow: Workflow
+): string {
+  const role = getParamRole(p);
+
+  if (role === 'input') {
+    const connected = isInputConnected(nodeId, p.id, workflow);
+    if (connected) return 'connected';
+    if (p.value?.trim()) return p.value;
+    return 'empty';
+  }
+
+  if (role === 'output') {
+    return p.value?.trim() || 'auto path / empty';
+  }
+
+  if (p.kind === 'bool') {
+    return p.value === 'false' ? 'false' : 'true';
+  }
+
+  return p.value?.trim() || 'empty';
+}
+
+function RoleSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: 'local' | 'input' | 'output';
+  onChange: (v: 'local' | 'input' | 'output') => void;
+}) {
+  return (
+    <label className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as 'local' | 'input' | 'output')}
+        className={styles.select}
+      >
+        <option value="local">local</option>
+        <option value="input">input</option>
+        <option value="output">output</option>
+      </select>
+    </label>
+  );
 }

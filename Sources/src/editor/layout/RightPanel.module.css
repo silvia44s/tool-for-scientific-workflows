@@ -1,3 +1,11 @@
+/**
+ * @file RightPanel.module.css
+ * @brief Styles for the right panel component.
+ * @author Silvia Šlachtovská
+ *.
+ */
+
+
 .root {
   height: 100%;
   display: flex;
@@ -228,6 +236,18 @@
   color: #A5A5F2;
 }
 
+.paramChip_local {
+  border-left: 6px solid rgb(143, 230, 134);
+}
+
+.paramChip_input {
+  border-left: 6px solid #7bb0f0;
+}
+
+.paramChip_output {
+  border-left: 6px solid #a887c8;
+}
+
 .paramChip:hover {
   border-color: rgba(193, 239, 175, 0.45);
   background: rgba(255, 255, 255, 0.09);
@@ -254,6 +274,7 @@
   border-radius: 14px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.07);
+  margin-bottom: 15px;
 }
 
 .paramEditorHeader {

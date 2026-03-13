@@ -136,6 +136,7 @@ export type TaskIO = {
   outputs: IOPort[];
 };
 
+export type WorkflowBackend = 'local' | 'slurm' | 'pbs';
 
 // Batch array configuration for HPC workloads
 export type BatchArray = {
@@ -147,23 +148,18 @@ export type BatchArray = {
 
 
 // Batch execution configuration
-export type BatchConfig = {
-  backend: 'local' | 'slurm' | 'pbs';
-
+export type TaskBatchConfig = {
   cpus?: number;
   memMB?: number;
   timeMin?: number;
-
-  // scheduler partition or queue name
   partitionOrQueue?: string;
-
   account?: string;
   qos?: string;
-
   array?: BatchArray;
-
-  // additional custom scheduler options
   custom?: string;
+  customDirectives?: string;
+  prologue?: string;
+  epilogue?: string;
 };
 
 
@@ -191,7 +187,7 @@ export type TaskNode = NodeBase & {
     io: TaskIO;
 
     // batch execution configuration
-    batch: BatchConfig;
+    batch: TaskBatchConfig;
   };
 };
 
@@ -221,6 +217,7 @@ export type CanvasInfo = {
 // Workflow execution configuration
 export type WorkflowRunConfig = {
   resultsRoot?: string;
+  backend: WorkflowBackend;
 };
 
 
@@ -230,7 +227,7 @@ export type Workflow = {
   id: string;
   name: string;
 
-  run?: WorkflowRunConfig;
+  run: WorkflowRunConfig;
 
   canvas: CanvasInfo;
 

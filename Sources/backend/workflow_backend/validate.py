@@ -8,8 +8,7 @@ So not just JSON shape validation, but also things like:
 - duplicate connections
 - required params
 - broken param/port bindings
-
-Still work in progress, but already catches most obvious mistakes.
+- basic batch config sanity
 """
 
 from __future__ import annotations
@@ -41,6 +40,122 @@ class WorkflowValidationError(Exception):
         super().__init__(msg)
 
 
+def _validate_batch_config(task: TaskNode, issues: List[ValidationIssue], backend: str) -> None:
+    """
+    Validate batch config sanity.
+
+    This is intentionally lightweight:
+    - numeric values should be positive
+    - array settings should make sense
+    - custom directive lines should roughly look like scheduler directives
+    """
+    batch = task.task.batch
+    arr = batch.array
+
+    if batch.cpus is not None and batch.cpus <= 0:
+        issues.append(
+            ValidationIssue(
+                "BATCH_CPUS_INVALID",
+                f"Task {task.id}: cpus must be > 0."
+            )
+        )
+
+    if batch.memMB is not None and batch.memMB <= 0:
+        issues.append(
+            ValidationIssue(
+                "BATCH_MEM_INVALID",
+                f"Task {task.id}: memMB must be > 0."
+            )
+        )
+
+    if batch.timeMin is not None and batch.timeMin <= 0:
+        issues.append(
+            ValidationIssue(
+                "BATCH_TIME_INVALID",
+                f"Task {task.id}: timeMin must be > 0."
+            )
+        )
+
+    if arr and arr.enabled:
+        if arr.start is None or arr.end is None:
+            issues.append(
+                ValidationIssue(
+                    "BATCH_ARRAY_RANGE_MISSING",
+                    f"Task {task.id}: batch array is enabled but start/end is missing."
+                )
+            )
+        else:
+            if arr.start > arr.end:
+                issues.append(
+                    ValidationIssue(
+                        "BATCH_ARRAY_RANGE_INVALID",
+                        f"Task {task.id}: batch array start ({arr.start}) is greater than end ({arr.end})."
+                    )
+                )
+
+        if arr.step is not None and arr.step <= 0:
+            issues.append(
+                ValidationIssue(
+                    "BATCH_ARRAY_STEP_INVALID",
+                    f"Task {task.id}: batch array step must be > 0."
+                )
+            )
+
+    # validate custom directives very lightly
+    # supported:
+    #   - raw scheduler flags starting with "-"
+    #   - full lines starting with #SBATCH / #PBS
+    custom_directives = (getattr(batch, "customDirectives", "") or "").strip()
+
+    # backward compatibility with older model
+    if not custom_directives:
+        custom_directives = (getattr(batch, "custom", "") or "").strip()
+
+    if custom_directives:
+        expected_prefix = "#SBATCH" if backend == "slurm" else "#PBS" if backend == "pbs" else None
+
+        for idx, raw in enumerate(custom_directives.splitlines(), start=1):
+            line = raw.strip()
+            if not line:
+                continue
+
+            ok = False
+            if line.startswith("-"):
+                ok = True
+            elif expected_prefix and line.startswith(expected_prefix):
+                ok = True
+
+            if not ok:
+                issues.append(
+                    ValidationIssue(
+                        "BATCH_CUSTOM_DIRECTIVE_INVALID",
+                        f"Task {task.id}: custom directive line {idx} has invalid format: '{line}'. "
+                        f"Use lines starting with '-' or '{expected_prefix}'."
+                    )
+                )
+
+    # validate prologue / epilogue types lightly
+    # no content restrictions here, only ensure these fields are strings if present
+    prologue = getattr(batch, "prologue", None)
+    epilogue = getattr(batch, "epilogue", None)
+
+    if prologue is not None and not isinstance(prologue, str):
+        issues.append(
+            ValidationIssue(
+                "BATCH_PROLOGUE_INVALID",
+                f"Task {task.id}: prologue must be a string."
+            )
+        )
+
+    if epilogue is not None and not isinstance(epilogue, str):
+        issues.append(
+            ValidationIssue(
+                "BATCH_EPILOGUE_INVALID",
+                f"Task {task.id}: epilogue must be a string."
+            )
+        )
+
+
 def validate_workflow(wf: WorkflowDoc) -> None:
     """
     Main workflow validation entry point.
@@ -52,6 +167,8 @@ def validate_workflow(wf: WorkflowDoc) -> None:
     - simple type compatibility between ports
     - task param validation
     - input/output port binding checks
+    - basic task config validation
+    - batch config validation
 
     Raises WorkflowValidationError if anything is wrong.
     """
@@ -61,8 +178,17 @@ def validate_workflow(wf: WorkflowDoc) -> None:
     if not wf.nodes:
         issues.append(ValidationIssue("WF_EMPTY", "Workflow has no nodes."))
 
+    # ---- run config
+    backend = "local"
+
+    if wf.run is None:
+        issues.append(ValidationIssue("WF_RUN_MISSING", "Workflow run configuration is missing."))
+    else:
+        backend = wf.run.backend
+        if backend not in {"local", "slurm", "pbs"}:
+            issues.append(ValidationIssue("WF_BACKEND_INVALID", f"Unsupported workflow backend '{backend}'."))
+
     # ---- pre-index ports + params for faster lookup
-    # makes later validation easier and avoids repeated scanning
     out_ports: Dict[str, Dict[str, IOPort]] = {}
     in_ports: Dict[str, Dict[str, IOPort]] = {}
     params_by_node: Dict[str, Dict[str, TaskParam]] = {}
@@ -77,7 +203,6 @@ def validate_workflow(wf: WorkflowDoc) -> None:
     incoming_to_input: Set[Tuple[str, str]] = set()  # (targetNodeId, targetHandle)
 
     for edge_id, e in wf.edges.items():
-        # edge source must exist
         if e.source not in wf.nodes:
             issues.append(
                 ValidationIssue(
@@ -87,7 +212,6 @@ def validate_workflow(wf: WorkflowDoc) -> None:
             )
             continue
 
-        # edge target must exist
         if e.target not in wf.nodes:
             issues.append(
                 ValidationIssue(
@@ -97,7 +221,6 @@ def validate_workflow(wf: WorkflowDoc) -> None:
             )
             continue
 
-        # both handles should be present
         if not e.sourceHandle or not e.targetHandle:
             issues.append(
                 ValidationIssue(
@@ -107,7 +230,6 @@ def validate_workflow(wf: WorkflowDoc) -> None:
             )
             continue
 
-        # just in case FE missed it
         if e.source == e.target:
             issues.append(
                 ValidationIssue(
@@ -138,7 +260,6 @@ def validate_workflow(wf: WorkflowDoc) -> None:
             )
             continue
 
-        # currently using strict typing only
         if not _is_compatible(src_port.dataType, dst_port.dataType):
             issues.append(
                 ValidationIssue(
@@ -149,8 +270,6 @@ def validate_workflow(wf: WorkflowDoc) -> None:
             )
             continue
 
-        # only one incoming edge per input handle
-        # maybe this could be relaxed later, but for now it keeps things simple
         input_key = (e.target, e.targetHandle)
         if input_key in incoming_to_input:
             issues.append(
@@ -162,7 +281,6 @@ def validate_workflow(wf: WorkflowDoc) -> None:
         else:
             incoming_to_input.add(input_key)
 
-        # prevent exact duplicate connections
         key = (e.source, e.sourceHandle, e.target, e.targetHandle)
         if key in seen_connections:
             issues.append(
@@ -175,25 +293,29 @@ def validate_workflow(wf: WorkflowDoc) -> None:
             seen_connections.add(key)
 
     # ---- validate task internals
-    print("FINAL incoming_to_input:", incoming_to_input)
-    print("START task validation")
-
     for node_id, task in wf.nodes.items():
         params = params_by_node[node_id]
 
-        # debug prints left here for now, useful while testing odd cases
-        print(f"\nTASK {task.id}")
-        for port in task.task.io.inputs:
-            print("CALLING _validate_params FOR", task.id)
-            print(" input port:", port.id, "binds to", port.inputBind.paramId if port.inputBind else None)
-            print(" incoming present:", (task.id, port.id) in incoming_to_input)
+        # basic task config checks
+        binary = (task.task.config.binaryPath or "").strip()
+        if not binary:
+            issues.append(
+                ValidationIssue(
+                    "TASK_BINARY_EMPTY",
+                    f"Task {task.id} has empty binaryPath."
+                )
+            )
 
+        # validate task params
         _validate_params(
             task=task,
             params=params,
             incoming_to_input=incoming_to_input,
             issues=issues,
         )
+
+        # validate batch config
+        _validate_batch_config(task, issues, backend)
 
         # input ports should bind to a real param
         for p in task.task.io.inputs:
@@ -214,7 +336,7 @@ def validate_workflow(wf: WorkflowDoc) -> None:
                     )
                 )
 
-        # output ports should also point somewhere valid
+        # output ports should point somewhere valid
         for p in task.task.io.outputs:
             if p.outputSource is None:
                 issues.append(
@@ -267,7 +389,6 @@ def _validate_params(
     """
     input_port_by_param_id: Dict[str, IOPort] = {}
 
-    # build reverse mapping: paramId -> input port
     for port in task.task.io.inputs:
         if port.inputBind and port.inputBind.kind == "param":
             input_port_by_param_id[port.inputBind.paramId] = port
@@ -280,7 +401,6 @@ def _validate_params(
         if input_port is not None:
             has_incoming_edge = (task.id, input_port.id) in incoming_to_input
 
-        # required param must either have a local value or an incoming connection
         if p.required and not v and not has_incoming_edge:
             issues.append(
                 ValidationIssue(
@@ -290,7 +410,6 @@ def _validate_params(
             )
             continue
 
-        # empty optional param is fine
         if not v:
             continue
 
@@ -331,5 +450,4 @@ def _validate_params(
                 )
 
         elif p.kind in {"file", "directory", "string"}:
-            # nothing extra to check here for now
             pass

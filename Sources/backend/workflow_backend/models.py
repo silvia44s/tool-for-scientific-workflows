@@ -135,8 +135,6 @@ class BatchArray(BaseModel):
 
 # execution settings for different backends
 class BatchConfig(BaseModel):
-    backend: Literal["local", "slurm", "pbs"] = "local"
-
     cpus: Optional[int] = None
     memMB: Optional[int] = None
     timeMin: Optional[int] = None
@@ -147,8 +145,15 @@ class BatchConfig(BaseModel):
 
     array: Optional[BatchArray] = None
 
-    # extra raw scheduler flags if needed
+    # fallback
     custom: Optional[str] = ""
+
+    # extra raw scheduler flags/directives
+    customDirectives: Optional[str] = ""
+
+    # shell code before / after command
+    prologue: Optional[str] = ""
+    epilogue: Optional[str] = ""
 
 
 # ---------- task config ----------
@@ -225,6 +230,8 @@ class CanvasInfo(BaseModel):
 # runtime configuration injected by backend
 class WorkflowRunConfig(BaseModel):
     resultsRoot: Optional[str] = None
+    backend: Literal["local", "slurm", "pbs"] = "local"
+
 
 
 # ---------- root document ----------
