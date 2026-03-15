@@ -27,6 +27,7 @@
 
 .right {
   min-width: 290px;
+  width: 330px;
   border-left: 1px solid #C1EFAF;
   overflow: hidden;
 }

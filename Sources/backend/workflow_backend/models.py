@@ -200,6 +200,38 @@ class TaskNode(NodeBase):
     type: Literal["task"] = "task"
     task: TaskInner
 
+# ---------- subworkflow ----------
+
+class SubworkflowBoundaryInput(BaseModel):
+    portId: str
+    targetNodeId: str
+    targetPortId: str
+
+
+class SubworkflowBoundaryOutput(BaseModel):
+    portId: str
+    sourceNodeId: str
+    sourcePortId: str
+
+
+class SubworkflowBoundary(BaseModel):
+    inputs: List[SubworkflowBoundaryInput] = Field(default_factory=list)
+    outputs: List[SubworkflowBoundaryOutput] = Field(default_factory=list)
+
+
+class SubworkflowInner(BaseModel):
+    workflow: "WorkflowDoc"
+    io: TaskIO = Field(default_factory=TaskIO)
+    boundary: SubworkflowBoundary = Field(default_factory=SubworkflowBoundary)
+
+
+class SubworkflowNode(NodeBase):
+    type: Literal["subworkflow"] = "subworkflow"
+    description: Optional[str] = ""
+    subworkflow: SubworkflowInner
+
+
+WorkflowNode = Union[TaskNode, SubworkflowNode]
 
 # ---------- edges ----------
 
@@ -250,5 +282,9 @@ class WorkflowDoc(BaseModel):
     canvas: CanvasInfo
 
     # workflow graph
-    nodes: Dict[str, TaskNode] = Field(default_factory=dict)
+    nodes: Dict[str, WorkflowNode] = Field(default_factory=dict)
     edges: Dict[str, WorkflowEdge] = Field(default_factory=dict)
+
+
+WorkflowDoc.model_rebuild()
+SubworkflowInner.model_rebuild()

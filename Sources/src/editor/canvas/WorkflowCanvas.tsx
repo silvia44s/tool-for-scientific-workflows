@@ -31,8 +31,9 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { useWorkflowState } from '../state/workflowState';
+import { useWorkflowState, /*getActiveWorkflow*/ } from '../state/workflowState';
 import { TaskNodeView } from './nodes/TaskNode';
+import { SubworkflowNodeView } from './nodes/SubWorkflowNode';
 
 import type { WorkflowNode, PortDataType } from '../state/model';
 
@@ -65,12 +66,21 @@ function WorkflowCanvasInner() {
 
   const { state, dispatch } = useWorkflowState();
 
+  /*const activeWorkflow = useMemo(
+    () => getActiveWorkflow(state.workflow, state.activePath),
+    [state.workflow, state.activePath]
+  );*/
+
   /**
    * Mapping between node type identifiers and React components.
    */
-  const nodeTypes: NodeTypes = useMemo(() => ({ taskNode: TaskNodeView }), []);
-
-
+  const nodeTypes: NodeTypes = useMemo(
+    () => ({
+      task: TaskNodeView,
+      subworkflow: SubworkflowNodeView,
+    }),
+    []
+  );
   // ----- 1) map store -> reactflow nodes/edges
 
   /**
@@ -80,16 +90,22 @@ function WorkflowCanvasInner() {
   const storeNodes: Node[] = useMemo(() => {
     return Object.values(state.workflow.nodes).map((n) => ({
       id: n.id,
-      type: n.type === 'task' ? 'taskNode' : 'default',
+      type: n.type === 'task' ? 'task' : 'subworkflow',
       position: n.position,
-      selected: state.selectedNodeId === n.id,
+      selected: state.selectedNodeIds.includes(n.id),
       data: {
         title: n.name,
-        subtitle: n.type === 'task' ? (n.task.config.binaryPath || 'no binary') : '',
-        ports: n.type === 'task' ? n.task.io : { inputs: [], outputs: [] },
+        subtitle:
+          n.type === 'task'
+            ? (n.task.config.binaryPath || 'no binary')
+            : (n.description || 'subworkflow'),
+        ports:
+          n.type === 'task'
+            ? n.task.io
+            : n.subworkflow.io,
       },
     }));
-  }, [state.workflow.nodes]);
+  }, [state.workflow.nodes, state.selectedNodeIds]);
 
 
   /**
@@ -238,11 +254,26 @@ function WorkflowCanvasInner() {
     nodes: Record<string, WorkflowNode>
   ): PortDataType | null {
     const n = nodes[nodeId];
-    if (!n || n.type !== 'task') return null;
+    if (!n) return null;
 
-    const list = direction === 'input' ? n.task.io.inputs : n.task.io.outputs;
+    const io = n.type === 'task' ? n.task.io : n.subworkflow.io;
+    const list = direction === 'input' ? io.inputs : io.outputs;
     const p = list.find((x) => x.id === handleId);
+
     return p?.dataType ?? null;
+  }
+
+  function sameIds(a: string[], b: string[]) {
+    if (a.length !== b.length) return false;
+
+    const as = [...a].sort();
+    const bs = [...b].sort();
+
+    for (let i = 0; i < as.length; i++) {
+      if (as[i] !== bs[i]) return false;
+    }
+
+    return true;
   }
 
 
@@ -292,7 +323,7 @@ function WorkflowCanvasInner() {
 
 
   return (
-    <div style={{ width: '100%', height: '100%' }} ref={reactFlowWrapper}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }} ref={reactFlowWrapper}>
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
@@ -304,16 +335,36 @@ function WorkflowCanvasInner() {
         onDragOver={onDragOver}
         defaultEdgeOptions={{ style: { stroke: '#888', strokeWidth: 2.5 }}}
 
-        onNodeClick={(_, node) => {
-          dispatch({ type: 'selection/set', nodeId: node.id });
+        onNodeClick={(event, node) => {
+          const multi = event.ctrlKey || event.metaKey || event.shiftKey;
 
-          setNodes((nds) =>
+          if (multi) {
+            dispatch({ type: 'selection/toggleNode', nodeId: node.id });
+          } else {
+            dispatch({ type: 'selection/setSingleNode', nodeId: node.id });
+            setNodes((nds) =>
             nds.map((n) => ({ ...n, selected: n.id === node.id }))
-          );
+            );
 
-          setEdges((eds) =>
-            eds.map((e) => ({ ...e, selected: false }))
-          );
+            setEdges((eds) =>
+              eds.map((e) => ({ ...e, selected: false }))
+            );
+          }
+        }}
+
+        onNodeDoubleClick={(_, node) => {
+          const wfNode = state.workflow.nodes[node.id];
+          if (!wfNode || wfNode.type !== 'subworkflow') return;
+
+          dispatch({ type: 'navigation/openSubworkflow', nodeId: node.id });
+        }}
+
+        onPaneClick={() => {
+          dispatch({ type: 'selection/clearNodes' });
+          dispatch({ type: 'selection/setEdge', edgeId: null });
+          
+          setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+          setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
         }}
 
         onEdgeClick={(_, edge) => {
@@ -326,14 +377,6 @@ function WorkflowCanvasInner() {
           setNodes((nds) =>
             nds.map((n) => ({ ...n, selected: false }))
           );
-        }}
-
-        onPaneClick={() => {
-          dispatch({ type: 'selection/set', nodeId: null });
-          dispatch({ type: 'selection/setEdge', edgeId: null });
-
-          setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
-          setEdges((eds) => eds.map((e) => ({ ...e, selected: false })));
         }}
 
         onNodeDragStop={(_, node) =>

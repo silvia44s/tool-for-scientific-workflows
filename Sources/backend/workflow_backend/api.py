@@ -24,7 +24,12 @@ from workflow_backend.generate.execution_planner import build_execution_plan
 from workflow_backend.generate.run_script import generate_run_script
 from workflow_backend.generate.slurm_script import generate_slurm_scripts
 from workflow_backend.generate.pbs_script import generate_pbs_scripts
+from workflow_backend.metadata import (
+    write_run_metadata,
+    update_run_metadata,
+)
 
+from workflow_backend.flatten import flatten_workflow
 
 # create FastAPI app
 app = FastAPI()
@@ -138,9 +143,21 @@ def run_workflow(payload: dict) -> RunResponse:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid workflow JSON: {e}")
 
+    # flatten workflow (handle subworkflows)
+    try:
+        flat_wf = flatten_workflow(wf)
+    except Exception as e:
+        return RunResponse(
+            ok=False,
+            message="Workflow flattening failed.",
+            run_dir=str(run_dir),
+            stderr=str(e),
+            returncode=2,
+        )
+    
     # run custom validation logic
     try:
-        validate_workflow(wf)
+        validate_workflow(flat_wf)
     except WorkflowValidationError as e:
         return RunResponse(
             ok=False,
@@ -155,12 +172,15 @@ def run_workflow(payload: dict) -> RunResponse:
     workflow_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
        # figure out execution order of tasks
-    ordered = [t.node_id for t in plan_tasks(wf)]
+    ordered = [t.node_id for t in plan_tasks(flat_wf)]
 
     # build full execution plan (commands, env, etc.)
-    plan = build_execution_plan(wf, ordered)
+    plan = build_execution_plan(flat_wf, ordered)
 
     backend = getattr(getattr(wf, "run", None), "backend", "local")
+
+    write_run_metadata(run_dir, flat_wf, backend)
+    ##write_task_metadata(run_dir, plan)
 
     if backend == "local":
         # generate shell script that runs the workflow locally
@@ -175,6 +195,19 @@ def run_workflow(payload: dict) -> RunResponse:
             text=True,
         )
 
+        if proc.returncode == 0:
+            update_run_metadata(
+                run_dir,
+                status="finished",
+                finishedAt=datetime.now().isoformat(),
+            )
+        else:
+            update_run_metadata(
+                run_dir,
+                status="failed",
+                finishedAt=datetime.now().isoformat(),
+            )
+
         return RunResponse(
             ok=(proc.returncode == 0),
             message="Workflow finished successfully." if proc.returncode == 0 else "Workflow execution failed.",
@@ -187,6 +220,10 @@ def run_workflow(payload: dict) -> RunResponse:
 
     if backend == "slurm":
         submit_path = generate_slurm_scripts(plan, str(run_dir))
+        update_run_metadata(
+            run_dir,
+            status="scripts_generated",
+        )
         return RunResponse(
             ok=True,
             message="Slurm scripts generated successfully.",
@@ -199,6 +236,10 @@ def run_workflow(payload: dict) -> RunResponse:
 
     if backend == "pbs":
         submit_path = generate_pbs_scripts(plan, str(run_dir))
+        update_run_metadata(
+            run_dir,
+            status="scripts_generated",
+        )
         return RunResponse(
             ok=True,
             message="PBS scripts generated successfully.",
@@ -232,6 +273,18 @@ def submit_workflow(req: SubmitRequest) -> SubmitResponse:
         capture_output=True,
         text=True,
     )
+
+    if proc.returncode == 0:
+        update_run_metadata(
+            run_dir,
+            status="submitted",
+            submittedAt=datetime.now().isoformat(),
+        )
+    else:
+        update_run_metadata(
+            run_dir,
+            status="submit_failed",
+        )
 
     return SubmitResponse(
         ok=(proc.returncode == 0),

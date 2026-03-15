@@ -15,6 +15,7 @@
 import { useRef, useState, useEffect } from 'react';
 import styles from './TopBar.module.css';
 import { useWorkflowState } from '../state/workflowState';
+import { getActiveWorkflow } from '../state/workflowUtils';
 import toast from 'react-hot-toast';
 
 import {
@@ -57,8 +58,21 @@ export function TopBar() {
   const { state, dispatch } = useWorkflowState();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  const hasSelection = !!state.selectedNodeId || !!state.selectedEdgeId;
+const activeWorkflow = getActiveWorkflow(state.workflow, state.activePath);
 
+const hasSelection = state.selectedNodeIds.length > 0 || !!state.selectedEdgeId;
+
+const selectedNodes = state.selectedNodeIds
+  .map((id) => activeWorkflow.nodes[id])
+  .filter(Boolean);
+
+const canGroupSelection =
+  selectedNodes.length >= 2 &&
+  selectedNodes.every((n) => n.type === 'task');
+
+const canUngroupSelection =
+  selectedNodes.length === 1 &&
+  selectedNodes[0]?.type === 'subworkflow';
 
   /**
    * Helper function to download JSON data as a file.
@@ -124,9 +138,11 @@ export function TopBar() {
       return;
     }
 
-    if (state.selectedNodeId) {
-      dispatch({ type: 'node/remove', nodeId: state.selectedNodeId });
-      dispatch({ type: 'selection/set', nodeId: null });
+    if (state.selectedNodeIds.length > 0) {
+      for (const nodeId of state.selectedNodeIds) {
+        dispatch({ type: 'node/remove', nodeId });
+      }
+      dispatch({ type: 'selection/clearNodes' });
     }
   }
 
@@ -276,32 +292,70 @@ export function TopBar() {
   }
 
 
-  /**
-   * Global keyboard shortcut for deleting selected nodes or edges.
-   */
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+useEffect(() => {
+  function isTypingInEditable(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
 
-      if (state.selectedEdgeId) {
-        dispatch({ type: 'edge/remove', edgeId: state.selectedEdgeId });
-        return;
-      }
-
-      if (state.selectedNodeId) {
-        dispatch({ type: 'node/remove', nodeId: state.selectedNodeId });
-      }
+    const tag = target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+      return true;
     }
 
-    window.addEventListener('keydown', onKeyDown);
+    if (target.isContentEditable) {
+      return true;
+    }
 
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [state.selectedNodeId, state.selectedEdgeId, dispatch]);
+    return false;
+  }
 
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+
+    if (isTypingInEditable(e.target)) return;
+
+    if (state.selectedEdgeId) {
+      dispatch({ type: 'edge/remove', edgeId: state.selectedEdgeId });
+      return;
+    }
+
+    if (state.selectedNodeIds.length > 0) {
+      for (const nodeId of state.selectedNodeIds) {
+        dispatch({ type: 'node/remove', nodeId });
+      }
+      dispatch({ type: 'selection/clearNodes' });
+    }
+  }
+
+  window.addEventListener('keydown', onKeyDown);
+
+  return () => window.removeEventListener('keydown', onKeyDown);
+}, [state.selectedNodeIds, state.selectedEdgeId, dispatch]);
 
   return (
     <>
       <div className={styles.root}>
+      <button
+        type="button"
+        className={`${styles.btn} ${!(canGroupSelection || canUngroupSelection) ? styles.disabled : ''}`}
+        disabled={!(canGroupSelection || canUngroupSelection)}
+        onClick={() => {
+          if (canUngroupSelection) {
+            dispatch({ type: 'workflow/ungroupSelectedSubworkflow' });
+            return;
+          }
+
+          if (canGroupSelection) {
+            dispatch({ type: 'workflow/groupSelection' });
+          }
+        }}
+        title={
+          canUngroupSelection
+            ? 'Ungroup selected subworkflow'
+            : 'Create subworkflow from selected nodes'
+        }
+      >
+        {canUngroupSelection ? 'UNGROUP' : 'GROUP'}
+      </button>
 
         {/* delete selected element */}
         <button

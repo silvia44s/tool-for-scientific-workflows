@@ -120,22 +120,6 @@ export function LeftPanel() {
         />
 
       </div>
-
-
-      {/* floating button section  */}
-      {/*
-      <div className={styles.footer}>
-        <button
-          type="button"
-          className={styles.fab}
-          onClick={() => dispatch({ type: 'node/addTask', position: { x: 120, y: 120 } })}
-          title="Add node"
-        >
-          +
-        </button>
-      </div>
-      */}
-
     </div>
   );
 }
