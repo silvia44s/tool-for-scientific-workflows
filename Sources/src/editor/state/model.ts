@@ -17,7 +17,7 @@ export type Vec2 = { x: number; y: number };
 
 
 // Types of nodes supported in the workflow graph
-export type NodeType = 'task';
+export type NodeType = 'task' | 'subworkflow';
 
 
 // Supported parameter types for task execution.
@@ -193,7 +193,7 @@ export type TaskNode = NodeBase & {
 
 
 // Union type for all workflow node variants
-export type WorkflowNode = TaskNode;
+export type WorkflowNode = TaskNode | SubworkflowNode;
 
 
 // Edge connecting two nodes in the workflow graph
@@ -247,5 +247,28 @@ export type TaskNodePreset = {
     type: 'task';
     name: string;
     task: TaskNode['task'];
+  };
+};
+
+export type SubworkflowBoundary = {
+  inputs: Array<{
+    portId: string;         // input port on subworkflow node
+    targetNodeId: string;   // internal node id
+    targetPortId: string;   // internal input port id
+  }>;
+  outputs: Array<{
+    portId: string;         // output port on subworkflow node
+    sourceNodeId: string;   // internal node id
+    sourcePortId: string;   // internal output port id
+  }>;
+};
+
+export type SubworkflowNode = NodeBase & {
+  type: 'subworkflow';
+  description?: string;
+  subworkflow: {
+    workflow: Workflow;
+    io: TaskIO;
+    boundary: SubworkflowBoundary;
   };
 };
