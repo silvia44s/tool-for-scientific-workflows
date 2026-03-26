@@ -98,7 +98,11 @@ export type Action =
   | { type: 'navigation/openSubworkflow'; nodeId: string }
   | { type: 'navigation/goBack' }
   | { type: 'navigation/goToRoot' }
-  | { type: 'workflow/ungroupSelectedSubworkflow' };
+  | { type: 'workflow/ungroupSelectedSubworkflow' }
+  | { type: 'history/undo' }
+  | { type: 'history/redo' }
+  | { type: 'node/removeMany'; nodeIds: string[] }
+  | { type: 'node/addMany'; nodes: WorkflowNode[] };
 
 /**
  * @brief Main reducer function for workflow state updates.
@@ -737,6 +741,7 @@ export function reducer(state: State, action: Action): State {
       return {
         ...state,
         workflow: action.workflow,
+        activePath: [],
         selectedNodeIds: [],
         selectedEdgeId: null,
       };
@@ -892,6 +897,74 @@ export function reducer(state: State, action: Action): State {
           result.workflow
         ),
         selectedNodeIds: result.restoredNodeIds,
+        selectedEdgeId: null,
+      };
+    }
+
+    case 'node/removeMany': {
+      const activeWorkflow = getActiveWorkflow(state.workflow, state.activePath);
+
+      if (action.nodeIds.length === 0) {
+        return state;
+      }
+
+      const idsToRemove = new Set(action.nodeIds);
+
+      const restNodes: typeof activeWorkflow.nodes = {};
+      for (const [nodeId, node] of Object.entries(activeWorkflow.nodes)) {
+        if (!idsToRemove.has(nodeId)) {
+          restNodes[nodeId] = node;
+        }
+      }
+
+      const restEdges: typeof activeWorkflow.edges = {};
+      for (const [edgeId, edge] of Object.entries(activeWorkflow.edges)) {
+        if (idsToRemove.has(edge.source)) continue;
+        if (idsToRemove.has(edge.target)) continue;
+        restEdges[edgeId] = edge;
+      }
+
+      const updatedActiveWorkflow: Workflow = {
+        ...activeWorkflow,
+        nodes: restNodes,
+        edges: restEdges,
+      };
+
+      return {
+        ...state,
+        workflow: updateWorkflowAtPath(
+          state.workflow,
+          state.activePath,
+          updatedActiveWorkflow
+        ),
+        selectedNodeIds: state.selectedNodeIds.filter((id) => !idsToRemove.has(id)),
+        selectedEdgeId: null,
+      };
+    }
+
+    case 'node/addMany': {
+      if (action.nodes.length === 0) return state;
+
+      const activeWorkflow = getActiveWorkflow(state.workflow, state.activePath);
+
+      const newNodes = { ...activeWorkflow.nodes };
+      for (const node of action.nodes) {
+        newNodes[node.id] = node;
+      }
+
+      const updatedActiveWorkflow: Workflow = {
+        ...activeWorkflow,
+        nodes: newNodes,
+      };
+
+      return {
+        ...state,
+        workflow: updateWorkflowAtPath(
+          state.workflow,
+          state.activePath,
+          updatedActiveWorkflow
+        ),
+        selectedNodeIds: action.nodes.map((n) => n.id),
         selectedEdgeId: null,
       };
     }

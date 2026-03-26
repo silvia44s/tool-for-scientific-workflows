@@ -35,7 +35,8 @@ import { useWorkflowState, /*getActiveWorkflow*/ } from '../state/workflowState'
 import { TaskNodeView } from './nodes/TaskNode';
 import { SubworkflowNodeView } from './nodes/SubWorkflowNode';
 
-import type { WorkflowNode, PortDataType } from '../state/model';
+import type { WorkflowNode, PortDataType, TaskNodePreset } from '../state/model';
+import { createTaskNodeFromPreset, isTaskNodePreset } from '../state/nodePresets';
 
 import toast from 'react-hot-toast';
 
@@ -221,27 +222,59 @@ function WorkflowCanvasInner() {
   /**
    * Handles node drop and creates a new node in the workflow state.
    */
-  const onDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault();
+const onDrop = useCallback(
+  (event: React.DragEvent) => {
+    event.preventDefault();
 
-      const type = event.dataTransfer.getData('application/reactflow');
-      if (!type) return;
+    const type = event.dataTransfer.getData('application/reactflow');
+    if (!type) return;
 
-      const bounds = reactFlowWrapper.current?.getBoundingClientRect();
-      if (!bounds) return;
+    const bounds = reactFlowWrapper.current?.getBoundingClientRect();
+    if (!bounds) return;
 
-      const position = project({
-        x: event.clientX - bounds.left,
-        y: event.clientY - bounds.top,
-      });
+    const position = project({
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    });
 
-      if (type === 'task') {
-        dispatch({ type: 'node/addTask', position });
+    if (type === 'task') {
+      dispatch({ type: 'node/addTask', position });
+      return;
+    }
+
+    if (type === 'taskPreset') {
+      const rawPreset = event.dataTransfer.getData('application/task-preset');
+      if (!rawPreset) {
+        toast.error('Preset data is missing.');
+        return;
       }
-    },
-    [dispatch, project]
-  );
+
+      try {
+        const parsed = JSON.parse(rawPreset) as TaskNodePreset;
+
+        if (!isTaskNodePreset(parsed)) {
+          toast.error('Invalid task preset.');
+          return;
+        }
+
+        const newNode = createTaskNodeFromPreset(parsed, position);
+
+        dispatch({
+          type: 'node/addPresetNode',
+          node: newNode,
+        });
+
+        toast.success(`Preset "${parsed.presetName}" added.`);
+      } catch (err) {
+        console.error(err);
+        toast.error('Could not create node from preset.');
+      }
+
+      return;
+    }
+  },
+  [dispatch, project]
+);
 
 
   /**
