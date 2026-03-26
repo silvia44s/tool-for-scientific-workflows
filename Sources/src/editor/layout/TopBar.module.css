@@ -35,6 +35,20 @@
   background: #afafd4;
 }
 
+.groupBtn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: none;
+
+  background: #bac3ee ;
+  color: #573A70;
+
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
 .runBtn {
   height: 36px;
   padding: 0 14px;
@@ -221,4 +235,48 @@
 
 .modalClsBtn:hover {
   background: #5c0f0f;
+}
+
+.undoToast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 220px;
+  max-width: 360px;
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  background: rgba(48, 43, 92, 0.96);
+  color: #ffffff;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+  opacity: 0.90;
+}
+
+.undoToastText {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.undoToastBtn {
+  border: none;
+  background: transparent;
+  color: #c7ff9e;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+
+.undoToastBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.undoToastBtn:focus-visible {
+  outline: 2px solid #c7ff9e;
+  outline-offset: 2px;
 }

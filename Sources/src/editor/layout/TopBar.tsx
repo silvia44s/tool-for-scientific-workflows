@@ -15,7 +15,7 @@
 import { useRef, useState, useEffect } from 'react';
 import styles from './TopBar.module.css';
 import { useWorkflowState } from '../state/workflowState';
-import { getActiveWorkflow } from '../state/workflowUtils';
+import { getActiveWorkflow, createInitialWorkflow } from '../state/workflowUtils';
 import toast from 'react-hot-toast';
 
 import {
@@ -55,24 +55,26 @@ export function TopBar() {
   const [runError, setRunError] = useState<RunErrorInfo | null>(null);
   const [submitPrompt, setSubmitPrompt] = useState<SubmitPromptInfo | null>(null);
 
-  const { state, dispatch } = useWorkflowState();
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+
+  const { state, dispatch, canUndo, canRedo, isDirty, markSaved } = useWorkflowState();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-const activeWorkflow = getActiveWorkflow(state.workflow, state.activePath);
+  const activeWorkflow = getActiveWorkflow(state.workflow, state.activePath);
 
-const hasSelection = state.selectedNodeIds.length > 0 || !!state.selectedEdgeId;
+  const hasSelection = state.selectedNodeIds.length > 0 || !!state.selectedEdgeId;
 
-const selectedNodes = state.selectedNodeIds
-  .map((id) => activeWorkflow.nodes[id])
-  .filter(Boolean);
+  const selectedNodes = state.selectedNodeIds
+    .map((id) => activeWorkflow.nodes[id])
+    .filter(Boolean);
 
-const canGroupSelection =
-  selectedNodes.length >= 2 &&
-  selectedNodes.every((n) => n.type === 'task');
+  const canGroupSelection =
+    selectedNodes.length >= 2 &&
+    selectedNodes.every((n) => n.type === 'task');
 
-const canUngroupSelection =
-  selectedNodes.length === 1 &&
-  selectedNodes[0]?.type === 'subworkflow';
+  const canUngroupSelection =
+    selectedNodes.length === 1 &&
+    selectedNodes[0]?.type === 'subworkflow';
 
   /**
    * Helper function to download JSON data as a file.
@@ -90,11 +92,35 @@ const canUngroupSelection =
   }
 
 
+  function startNewWorkflow() {
+    dispatch({
+      type: 'workflow/replace',
+      workflow: createInitialWorkflow(),
+    });
+
+    markSaved();
+    setSubmitPrompt(null);
+    setRunError(null);
+    setIsNewModalOpen(false);
+    toast.success('New workflow created');
+  }
+
+  function onNewClick() {
+    if (isDirty) {
+      setIsNewModalOpen(true);
+      return;
+    }
+
+    startNewWorkflow();
+  }
+
   /**
    * Export current workflow as JSON file.
    */
-  function onExport() {
+  function onSaveAs() {
     downloadJson(`${state.workflow.name || 'workflow'}.json`, state.workflow);
+    markSaved();
+    toast.success('Workflow saved');
   }
 
 
@@ -118,7 +144,10 @@ const canUngroupSelection =
       const wf = JSON.parse(text);
 
       dispatch({ type: 'workflow/replace', workflow: wf });
+      markSaved();
       setSubmitPrompt(null);
+      setIsNewModalOpen(false);
+      toast.success('Workflow imported');
 
     } catch {
       alert('Invalid JSON file');
@@ -129,21 +158,56 @@ const canUngroupSelection =
 
 
   /**
-   * Delete currently selected node or edge.
+   * Delete currently selected nodes or edge.
    */
   function onDeleteSelected() {
+    const start = performance.now();
     if (state.selectedEdgeId) {
       dispatch({ type: 'edge/remove', edgeId: state.selectedEdgeId });
-      dispatch({ type: 'selection/setEdge', edgeId: null });
+      showDeleteUndoToast('Edge deleted');
       return;
     }
 
     if (state.selectedNodeIds.length > 0) {
-      for (const nodeId of state.selectedNodeIds) {
-        dispatch({ type: 'node/remove', nodeId });
-      }
-      dispatch({ type: 'selection/clearNodes' });
+      const count = state.selectedNodeIds.length;
+
+      dispatch({ type: 'node/removeMany', nodeIds: state.selectedNodeIds });
+
+      showDeleteUndoToast(count === 1 ? 'Node deleted' : `${count} nodes deleted`);
     }
+
+    requestAnimationFrame(() => {
+      const end = performance.now();
+      console.log(`Delete latency: ${(end - start).toFixed(2)} ms`);
+    });
+  }
+
+  function showDeleteUndoToast(message: string) {
+    toast.custom(
+      (t) => (
+        <div
+          className={styles.undoToast}
+          role="status"
+          aria-live="polite"
+        >
+          <span className={styles.undoToastText}>{message}</span>
+
+          <button
+            type="button"
+            className={styles.undoToastBtn}
+            onClick={() => {
+              dispatch({ type: 'history/undo' });
+              toast.dismiss(t.id);
+            }}
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      {
+        duration: 4000,
+      }
+    );
   }
 
 
@@ -223,6 +287,17 @@ const canUngroupSelection =
     }
   }
 
+  function measureUndo() {
+    const start = performance.now();
+
+    dispatch({ type: 'history/undo' });
+
+    requestAnimationFrame(() => {
+      const end = performance.now();
+      console.log(`Undo latency: ${(end - start).toFixed(2)} ms`);
+    });
+  }
+
 
   /**
    * Submit previously generated Slurm/PBS scripts.
@@ -291,6 +366,17 @@ const canUngroupSelection =
     }
   }
 
+useEffect(() => {
+  function onBeforeUnload(e: BeforeUnloadEvent) {
+    if (!isDirty) return;
+
+    e.preventDefault();
+    e.returnValue = '';
+  }
+
+  window.addEventListener('beforeunload', onBeforeUnload);
+  return () => window.removeEventListener('beforeunload', onBeforeUnload);
+}, [isDirty]);
 
 useEffect(() => {
   function isTypingInEditable(target: EventTarget | null): boolean {
@@ -309,34 +395,112 @@ useEffect(() => {
   }
 
   function onKeyDown(e: KeyboardEvent) {
-    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
-
     if (isTypingInEditable(e.target)) return;
+
+    const isMod = e.ctrlKey || e.metaKey;
+
+    if (isMod && e.key.toLowerCase() === 'n') {
+      e.preventDefault();
+
+      if (isDirty) {
+        setIsNewModalOpen(true);
+      } else {
+        startNewWorkflow();
+      }
+      return;
+    }
+
+    if (isMod && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      dispatch({ type: 'history/undo' });
+      return;
+    }
+
+    if (
+      (isMod && e.shiftKey && e.key.toLowerCase() === 'z') ||
+      (e.ctrlKey && e.key.toLowerCase() === 'y')
+    ) {
+      e.preventDefault();
+      dispatch({ type: 'history/redo' });
+      return;
+    }
+
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
 
     if (state.selectedEdgeId) {
       dispatch({ type: 'edge/remove', edgeId: state.selectedEdgeId });
+      showDeleteUndoToast('Edge deleted');
       return;
     }
 
     if (state.selectedNodeIds.length > 0) {
-      for (const nodeId of state.selectedNodeIds) {
-        dispatch({ type: 'node/remove', nodeId });
-      }
-      dispatch({ type: 'selection/clearNodes' });
+      const count = state.selectedNodeIds.length;
+
+      dispatch({ type: 'node/removeMany', nodeIds: state.selectedNodeIds });
+      showDeleteUndoToast(count === 1 ? 'Node deleted' : `${count} nodes deleted`);
     }
-  }
+    }
 
   window.addEventListener('keydown', onKeyDown);
 
   return () => window.removeEventListener('keydown', onKeyDown);
-}, [state.selectedNodeIds, state.selectedEdgeId, dispatch]);
+}, [state.selectedNodeIds, state.selectedEdgeId, dispatch, isDirty]);
 
   return (
     <>
       <div className={styles.root}>
-      <button
+        <button type="button" className={styles.btn} onClick={onNewClick} title="New workflow (Ctrl+N)">
+          NEW
+        </button>
+
+        {/* export workflow */}
+        <button type="button" className={styles.btn} onClick={onSaveAs} title="Save workflow as JSON file">
+          SAVE
+        </button>
+
+
+        {/* import workflow */}
+        <button type="button" className={styles.btn} onClick={onImportClick} title="Import workflow from JSON">
+          IMPORT
+        </button>
+
+
+        {/* hidden file input */}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json"
+          onChange={onImportFile}
+          className={styles.hiddenFile}
+        />
+
+        <div className={styles.divider} />
+        {/* undo / redo */}
+        <button
+          type="button"
+          className={`${styles.iconBtnArrow} ${!canUndo ? styles.disabled : ''}`}
+          title="Undo (Ctrl+Z)"
+          disabled={!canUndo}
+          //onClick={() => dispatch({ type: 'history/undo' })}
+          onClick={measureUndo}
+        >
+          <ArrowUturnLeftIcon className={styles.icon} />
+        </button>
+
+        <button
+          type="button"
+          className={`${styles.iconBtnArrow} ${!canRedo ? styles.disabled : ''}`}
+          title="Redo (Ctrl+Shift+Z)"
+          disabled={!canRedo}
+          onClick={() => dispatch({ type: 'history/redo' })}
+        >
+          <ArrowUturnRightIcon className={styles.icon} />
+        </button>
+
+        <div className={styles.divider} />
+        <button
         type="button"
-        className={`${styles.btn} ${!(canGroupSelection || canUngroupSelection) ? styles.disabled : ''}`}
+        className={`${styles.groupBtn} ${!(canGroupSelection || canUngroupSelection) ? styles.disabled : ''}`}
         disabled={!(canGroupSelection || canUngroupSelection)}
         onClick={() => {
           if (canUngroupSelection) {
@@ -358,6 +522,7 @@ useEffect(() => {
       </button>
 
         {/* delete selected element */}
+        <div className={styles.divider} />
         <button
           type="button"
           className={`${styles.iconBtn} ${!hasSelection ? styles.disabled : ''}`}
@@ -368,40 +533,7 @@ useEffect(() => {
           <TrashIcon className={styles.icon} />
         </button>
 
-
-        {/* export workflow */}
-        <button type="button" className={styles.btn} onClick={onExport}>
-          EXPORT
-        </button>
-
-
-        {/* import workflow */}
-        <button type="button" className={styles.btn} onClick={onImportClick}>
-          IMPORT
-        </button>
-
-
-        {/* hidden file input */}
-        <input
-          ref={fileRef}
-          type="file"
-          accept="application/json"
-          onChange={onImportFile}
-          className={styles.hiddenFile}
-        />
-
-
-        {/* undo / redo placeholders */}
-        <button type="button" className={styles.iconBtnArrow} title="Undo" disabled>
-          <ArrowUturnLeftIcon className={styles.icon} />
-        </button>
-
-        <button type="button" className={styles.iconBtnArrow} title="Redo" disabled>
-          <ArrowUturnRightIcon className={styles.icon} />
-        </button>
-
-
-        {/* run workflow */}
+        <div className={styles.divider} />
         <button
           type="button"
           className={styles.runBtn}
@@ -530,6 +662,64 @@ useEffect(() => {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'SUBMITTING...' : 'Submit now'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isNewModalOpen && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsNewModalOpen(false)}
+        >
+          <div
+            className={styles.modalCard}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Create new workflow</h3>
+
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setIsNewModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <p className={styles.modalMessage}>
+                Your current workflow will be replaced. Choose how you want to continue.
+              </p>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.modalClsBtn}
+                onClick={() => setIsNewModalOpen(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className={styles.modalOkBtn}
+                onClick={() => {
+                  setIsNewModalOpen(false);
+                  fileRef.current?.click();
+                }}
+              >
+                Import JSON
+              </button>
+
+              <button
+                type="button"
+                className={styles.modalOkBtn}
+                onClick={startNewWorkflow}
+              >
+                Start empty
               </button>
             </div>
           </div>

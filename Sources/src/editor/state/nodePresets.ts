@@ -244,3 +244,62 @@ export function createTaskNodeFromPreset(
     },
   };
 }
+
+const STORAGE_KEY = 'workflow-task-presets';
+
+
+export function loadStoredTaskPresets(): TaskNodePreset[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter(isTaskNodePreset);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Saves the list of task presets to local storage.
+ * @param presets 
+ * 
+ */
+export function saveStoredTaskPresets(presets: TaskNodePreset[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(presets));
+}
+
+
+/**
+ * 
+ * @param preset 
+ * @returns 
+ */
+export function addStoredTaskPreset(preset: TaskNodePreset) {
+  const presets = loadStoredTaskPresets();
+
+  const exists = presets.some((p) => p.presetName === preset.presetName);
+  const updated = exists
+    ? presets.map((p) => (p.presetName === preset.presetName ? preset : p))
+    : [...presets, preset];
+
+  saveStoredTaskPresets(updated);
+  return updated;
+}
+
+
+/**
+ * 
+ * @param presetName 
+ * @returns 
+ */
+export function removeStoredTaskPreset(presetName: string) {
+  const presets = loadStoredTaskPresets().filter(
+    (p) => p.presetName !== presetName
+  );
+
+  saveStoredTaskPresets(presets);
+  return presets;
+}
