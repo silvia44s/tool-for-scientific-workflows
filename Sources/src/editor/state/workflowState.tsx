@@ -17,6 +17,9 @@ import React, {
 import { createInitialWorkflow } from './workflowUtils';
 import { reducer, type Action, type State } from './workflowReducer';
 
+import { useEffect } from 'react';
+import { createWorkflowTestApi } from '../testing/testApi';
+
 type HistoryAction = Action | { type: 'history/markSaved' };
 
 /**
@@ -191,6 +194,20 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
     }),
     [historyState, markSaved]
   );
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (typeof window === 'undefined') return;
+
+    window.__workflowTestApi = createWorkflowTestApi({
+      getState: () => historyState.present,
+      dispatch: rawDispatch as React.Dispatch<Action>,
+    });
+
+    return () => {
+      delete window.__workflowTestApi;
+    };
+  }, [historyState, rawDispatch]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
