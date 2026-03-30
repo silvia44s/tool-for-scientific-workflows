@@ -1,0 +1,65 @@
+[
+  {
+    "inserted": 10,
+    "totalNodes": 10,
+    "insertMs": 41.64,
+    "deleteMs": 62.72,
+    "undoMs": 37.26
+  },
+  {
+    "inserted": 20,
+    "totalNodes": 20,
+    "insertMs": 31.5,
+    "deleteMs": 38.78,
+    "undoMs": 29.88
+  },
+  {
+    "inserted": 50,
+    "totalNodes": 50,
+    "insertMs": 45.2,
+    "deleteMs": 48.1,
+    "undoMs": 53.96
+  },
+  {
+    "inserted": 100,
+    "totalNodes": 100,
+    "insertMs": 75.78,
+    "deleteMs": 85.42,
+    "undoMs": 45.1
+  },
+  {
+    "inserted": 185,
+    "totalNodes": 185,
+    "insertMs": 109.96,
+    "deleteMs": 140.8,
+    "undoMs": 91.36
+  },
+  {
+    "inserted": 250,
+    "totalNodes": 250,
+    "insertMs": 155.74,
+    "deleteMs": 179.76,
+    "undoMs": 112.92
+  },
+  {
+    "inserted": 500,
+    "totalNodes": 500,
+    "insertMs": 189.52,
+    "deleteMs": 358.54,
+    "undoMs": 310.94
+  },
+  {
+    "inserted": 750,
+    "totalNodes": 750,
+    "insertMs": 354.9,
+    "deleteMs": 600.38,
+    "undoMs": 385.14
+  },
+  {
+    "inserted": 1000,
+    "totalNodes": 1000,
+    "insertMs": 497.78,
+    "deleteMs": 888.76,
+    "undoMs": 415.2
+  }
+]
