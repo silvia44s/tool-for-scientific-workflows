@@ -15,7 +15,10 @@ COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY backend /app/backend
+COPY demo_scripts /app/demo_scripts
 COPY --from=frontend-build /app/dist /app/dist
+
+RUN chmod +x /app/demo_scripts/*.py || true
 
 EXPOSE 8000
 

@@ -256,6 +256,25 @@ def _apply_edge_transfer(
     resolved_param_values[(edge.target, bind.paramId)] = out_val
 
 
+def _resolve_binary_path(binary: str) -> str:
+    """
+    Resolve binary/tool path in a portable way.
+
+    If the workflow contains an old absolute local path, but a script with the
+    same filename exists in /app/demo_scripts, prefer that deployed demo script.
+    """
+    v = (binary or "").strip()
+    if not v:
+        return v
+
+    p = Path(v)
+    demo_candidate = Path("/app/demo_scripts") / p.name
+
+    if demo_candidate.exists():
+        return str(demo_candidate)
+
+    return v
+
 # -----------------------------
 # Build argv for task
 # -----------------------------
@@ -271,7 +290,10 @@ def _build_argv(
         [binaryPath, --flag1, value1, --flag2, value2]
     """
     argv: List[str] = []
-    binary = task.task.config.binaryPath.strip()
+    binary = _resolve_binary_path(task.task.config.binaryPath.strip())
+
+    if binary.endswith(".py"):
+        argv.append("python3")
     argv.append(binary)
 
     for p in task.task.params:
