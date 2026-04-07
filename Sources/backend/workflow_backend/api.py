@@ -38,12 +38,11 @@ app = FastAPI()
 # mostly needed during development when Vite runs on another port
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # directory where workflow runs will be stored
 RUNS_ROOT = Path("runs").resolve()
@@ -294,3 +293,26 @@ def submit_workflow(req: SubmitRequest) -> SubmitResponse:
         returncode=proc.returncode,
         submit_script=str(submit_script),
     )
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+FRONTEND_DIST = Path("/app/dist")
+
+if FRONTEND_DIST.exists():
+    if (FRONTEND_DIST / "assets").exists():
+        app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
+
+    @app.get("/")
+    def serve_frontend():
+        return FileResponse(FRONTEND_DIST / "index.html")
+
+    @app.get("/{full_path:path}")
+    def serve_frontend_spa(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+
+        target = FRONTEND_DIST / full_path
+        if target.exists() and target.is_file():
+            return FileResponse(target)
+        return FileResponse(FRONTEND_DIST / "index.html")
