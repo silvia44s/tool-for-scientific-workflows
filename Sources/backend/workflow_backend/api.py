@@ -13,8 +13,14 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+import tempfile
+import zipfile
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pathlib import Path
+
 from pydantic import BaseModel
 
 from workflow_backend.models import WorkflowDoc
@@ -294,8 +300,34 @@ def submit_workflow(req: SubmitRequest) -> SubmitResponse:
         submit_script=str(submit_script),
     )
 
-from fastapi.responses import FileResponse
-from pathlib import Path
+@app.get("/api/download")
+def download_run_results(run_dir: str):
+    """
+    Create a ZIP archive from a run directory and return it as a download.
+    """
+    run_path = Path(run_dir).resolve()
+
+    if not run_path.exists() or not run_path.is_dir():
+        raise HTTPException(status_code=400, detail="Invalid run_dir.")
+
+    results_dir = run_path / "results"
+    if not results_dir.exists() or not results_dir.is_dir():
+        raise HTTPException(status_code=404, detail="Results directory not found.")
+
+    tmp_dir = Path(tempfile.mkdtemp(prefix="workflow_zip_"))
+    zip_path = tmp_dir / f"{run_path.name}.zip"
+
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file_path in results_dir.rglob("*"):
+            if file_path.is_file():
+                arcname = file_path.relative_to(run_path)
+                zf.write(file_path, arcname)
+
+    return FileResponse(
+        path=zip_path,
+        filename=f"{run_path.name}.zip",
+        media_type="application/zip",
+    )
 
 FRONTEND_DIST = Path("/app/dist")
 

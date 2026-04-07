@@ -273,6 +273,17 @@ export function TopBar() {
 
         if (backend === 'local') {
           toast.success('Workflow finished successfully', { id: toastId });
+
+          if (data.run_dir) {
+            const downloadUrl = `/api/download?run_dir=${encodeURIComponent(data.run_dir)}`;
+
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+          }
         } else {
           toast.success(`${backend.toUpperCase()} scripts generated successfully`, { id: toastId });
 
