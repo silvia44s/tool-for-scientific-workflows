@@ -247,7 +247,7 @@ export function TopBar() {
     const toastId = toast.loading('Running workflow...');
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/run', {
+      const res = await fetch('/api/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(state.workflow),
@@ -334,7 +334,7 @@ export function TopBar() {
     const toastId = toast.loading('Submitting workflow...');
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/submit', {
+      const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ run_dir: submitPrompt.runDir }),
