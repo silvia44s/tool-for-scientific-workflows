@@ -26,7 +26,7 @@ export function createInitialWorkflow(): Workflow {
   return {
     schemaVersion: 1,
     id: uid('wf'),
-    name: 'My Workflow',
+    name: 'workflow',
     canvas: { viewport: { x: 0, y: 0, zoom: 1 } },
     nodes: {},
     edges: {},
