@@ -294,25 +294,36 @@ def submit_workflow(req: SubmitRequest) -> SubmitResponse:
         submit_script=str(submit_script),
     )
 
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from pathlib import Path
 
 FRONTEND_DIST = Path("/app/dist")
 
-if FRONTEND_DIST.exists():
-    if (FRONTEND_DIST / "assets").exists():
-        app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
+print("FRONTEND_DIST:", FRONTEND_DIST)
+print("FRONTEND_DIST exists:", FRONTEND_DIST.exists())
+print("INDEX exists:", (FRONTEND_DIST / "index.html").exists())
 
-    @app.get("/")
-    def serve_frontend():
-        return FileResponse(FRONTEND_DIST / "index.html")
 
-    @app.get("/{full_path:path}")
-    def serve_frontend_spa(full_path: str):
-        if full_path.startswith("api/"):
-            raise HTTPException(status_code=404, detail="Not found")
+@app.get("/")
+def serve_frontend_root():
+    index_file = FRONTEND_DIST / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    raise HTTPException(status_code=404, detail="Frontend not built")
 
-        target = FRONTEND_DIST / full_path
-        if target.exists() and target.is_file():
-            return FileResponse(target)
-        return FileResponse(FRONTEND_DIST / "index.html")
+
+@app.get("/{full_path:path}")
+def serve_frontend(full_path: str):
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found")
+
+    requested = FRONTEND_DIST / full_path
+
+    if requested.exists() and requested.is_file():
+        return FileResponse(requested)
+
+    index_file = FRONTEND_DIST / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+
+    raise HTTPException(status_code=404, detail="Frontend not built")
