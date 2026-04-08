@@ -29,6 +29,8 @@ import {
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
+import { parseWorkflowImport, getWorkflowImportErrorMessage } from '../../validator/workflowImport';
+
 
 /**
  * Information about a workflow execution error returned by the backend.
@@ -164,7 +166,7 @@ export function TopBar() {
 
     try {
       const text = await f.text();
-      const wf = JSON.parse(text);
+      const wf = parseWorkflowImport(text);
 
       dispatch({ type: 'workflow/replace', workflow: wf });
       markSaved();
@@ -172,8 +174,8 @@ export function TopBar() {
       setIsNewModalOpen(false);
       toast.success('Workflow imported');
 
-    } catch {
-      alert('Invalid JSON file');
+    } catch (error) {
+        toast.error(getWorkflowImportErrorMessage(error));
     } finally {
       e.target.value = '';
     }

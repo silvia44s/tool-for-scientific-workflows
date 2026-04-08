@@ -135,6 +135,7 @@ export function LeftPanel() {
       <div className={styles.nodes}>
         <div
           className={styles.nodeCard}
+          title="Drag preset task node onto canvas"
           draggable
           onDragStart={(e) => {
             e.dataTransfer.setData('application/reactflow', 'task');
@@ -225,6 +226,7 @@ export function LeftPanel() {
           type="button"
           className={styles.nodeCardButton}
           onClick={onImportPresetClick}
+          title="Import preset from JSON"
         >
           Import Task Preset
         </button>

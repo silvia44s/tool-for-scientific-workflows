@@ -22,6 +22,7 @@ import { TaskParametersSection } from './sections/TaskParameterSection';
 import { TaskEnvironmentSection } from './sections/TaskEnvironmentSection';
 import { TaskBatchSection } from './sections/TaskBatchSection';
 import { SubworkflowPropertiesSection } from './sections/SubworkflowPropertiesSection';
+import toast from 'react-hot-toast';
 
 export function PropertiesView() {
   const { state, dispatch } = useWorkflowState();
@@ -146,6 +147,7 @@ export function PropertiesView() {
               onClick={() => {
                 const preset = buildTaskPreset(selected);
                 downloadJson(`${selected.name || 'task'}.preset.json`, preset);
+                toast.success('Node preset downloaded to files');
               }}
             >
               Save node preset

@@ -11,6 +11,8 @@ import { SubworkflowOverlay } from './canvas/SubworkflowOverlay';
 
 import { Toaster } from 'react-hot-toast';
 
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon } from '@heroicons/react/24/outline';
+
 function EditorCenter({
   leftOpen,
   setLeftOpen,
@@ -37,7 +39,7 @@ function EditorCenter({
             onClick={() => setLeftOpen(false)}
             title="Hide panel"
           >
-            ✕
+            <ChevronDoubleLeftIcon className={styles.hideIcon} />
           </button>
         </div>
 
@@ -51,7 +53,7 @@ function EditorCenter({
           onClick={() => setLeftOpen(true)}
           title="Show panel"
         >
-          ☰
+          <ChevronDoubleRightIcon className={styles.showLeftIcon} />
         </button>
       )}
     </div>

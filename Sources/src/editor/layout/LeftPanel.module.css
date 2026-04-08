@@ -85,14 +85,15 @@
 }
 
 .nodeCardButton {
-  width: 100%;
+  width: 60%;
   border: none;
   cursor: pointer;
   color: rgba(193, 239, 175, 0.95);
-  font-weight: 520;
-  font-size: 15px;
-  background: transparent ;
-  padding: 12px 14px;
+  font-weight: 600;
+  font-size: 13px;
+  background: rgba(193, 239, 175, 0.35);
+  padding: 7px 9px;
+  border-radius: 10px;
 }
 
 .hiddenFile {
