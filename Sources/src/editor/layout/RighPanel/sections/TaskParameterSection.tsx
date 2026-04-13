@@ -105,9 +105,6 @@ export function TaskParametersSection({
   }
 
   const allParams = node.task.params;
-  const regularParams = node.task.params.filter(
-    (p) => !p.exposeAsInput && !p.exposeAsOutput
-  );
 
   return (
     <section className={styles.section}>
@@ -259,10 +256,6 @@ export function TaskParametersSection({
             <PlusIcon className={styles.iconPlus} /> directory
           </AddParamButton>
         </div>
-
-        {regularParams.length === 0 && !draftParam && (
-          <div className={styles.hintText}>No parameters yet.</div>
-        )}
       </div>
     </section>
   );

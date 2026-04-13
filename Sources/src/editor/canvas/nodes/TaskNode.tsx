@@ -130,10 +130,10 @@ export function TaskNodeView({ data, selected }: NodeProps<TaskNodeData>) {
 
       <div className={styles.ports}>
         {inputs.map((p) => (
-          <PortRow key={p.id} port={p} side="left" />
+          <PortRow key={p.name} port={p} side="left" />
         ))}
         {outputs.map((p) => (
-          <PortRow key={p.id} port={p} side="right" />
+          <PortRow key={p.name} port={p} side="right" />
         ))}
       </div>
     </div>

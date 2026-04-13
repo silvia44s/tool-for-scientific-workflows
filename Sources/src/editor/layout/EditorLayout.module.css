@@ -2,32 +2,31 @@
  * @file EditorLayout.module.css
  * @brief Styles for the main editor layout.
  * @author Silvia Šlachtovská
- *.
  */
 
 .root {
   height: 100vh;
+  width: 100vw;
   display: flex;
   min-height: 0;
-}
-
-.left {
-  min-width: 260px;
-  border-right: 1px solid #C1EFAF;
-  overflow: auto;
-  background-color: #11144B;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .center {
-  flex: 1;
-  min-width: 1200px;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
 
 .right {
+  width: 300px;
   min-width: 290px;
-  width: 330px;
+  max-width: 330px;
+  min-height: 0;
   border-left: 1px solid #C1EFAF;
   overflow: hidden;
+  flex-shrink: 0;
 }

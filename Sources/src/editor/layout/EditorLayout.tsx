@@ -14,7 +14,6 @@
 import styles from './EditorLayout.module.css';
 
 type Props = {
-  left?: React.ReactNode;
   center: React.ReactNode;
   right: React.ReactNode;
 };
@@ -31,10 +30,9 @@ type Props = {
  * @param center Main content area.
  * @param right Content rendered in the right sidebar.
  */
-export function EditorLayout({ left, center, right }: Props) {
+export function EditorLayout({ center, right }: Props) {
   return (
     <div className={styles.root}>
-      {left ? <aside className={styles.left}>{left}</aside> : null}
       <main className={styles.center}>{center}</main>
       <aside className={styles.right}>{right}</aside>
     </div>

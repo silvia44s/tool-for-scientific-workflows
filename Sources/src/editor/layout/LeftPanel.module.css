@@ -43,7 +43,7 @@
   width: 180px;
   height: 70px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.85);
+  background: #ffffffd9;
   color: #11144B;
   font-weight: 800;
   display: grid;
@@ -88,7 +88,7 @@
   width: 60%;
   border: none;
   cursor: pointer;
-  color: rgba(193, 239, 175, 0.95);
+  color: #c1efaff2;
   font-weight: 600;
   font-size: 13px;
   background: rgba(193, 239, 175, 0.35);
