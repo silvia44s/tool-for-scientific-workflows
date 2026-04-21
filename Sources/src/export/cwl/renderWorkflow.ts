@@ -1,6 +1,24 @@
+/**
+ * @file renderWorkflow.ts
+ * @brief Renders a normalized workflow document into CWL YAML text.
+ *
+ * This file converts the intermediate normalized representation of a workflow
+ * into a textual CWL Workflow document. The renderer serializes workflow metadata,
+ * requirements, inputs, steps and outputs into YAML format.
+ */
+
 import type { NormalizedWorkflowDoc } from './types';
 import { yamlScalar } from './utils';
 
+/**
+ * @brief Converts a normalized workflow document into CWL YAML text.
+ *
+ * The renderer serializes the workflow label, optional requirements,
+ * workflow-level inputs, step definitions and workflow-level outputs.
+ *
+ * @param doc Normalized workflow document to render.
+ * @return CWL YAML string representing the workflow.
+ */
 export function renderWorkflow(doc: NormalizedWorkflowDoc): string {
   const lines: string[] = [];
 

@@ -1,7 +1,15 @@
+/**
+ * @file normalizeSubworkflow.ts
+ * @brief Normalizes a subworkflow node into an intermediate CWL workflow representation.
+ *
+ * This file transforms a subworkflow node from the internal workflow model into
+ * a normalized CWL Workflow document. It resolves public subworkflow inputs and outputs,
+ * internal task steps, boundary mappings and generated child files required for export.
+ */
+
 import type {
   SubworkflowNode,
-  WorkflowNode,
-} from '../../editor/state/model';
+} from '../../domain/workflow/model/model';
 import type {
   WorkflowNormalizationResult,
   WorkflowStepInfo,
@@ -16,8 +24,6 @@ import {
   findNodeById,
   findNodeInputPort,
   findNodeOutputPort,
-  getNodeInputPorts,
-  getNodeOutputPorts,
   makeSubworkflowInputId,
   makeSubworkflowOutputId,
   slugify,
@@ -26,6 +32,18 @@ import {
   topologicallyOrderNodeIds,
 } from './utils';
 
+/**
+ * @brief Normalizes a subworkflow node into a CWL workflow document and related files.
+ *
+ * The normalization process converts internal task nodes into workflow steps,
+ * resolves internal edge connections, maps public boundary ports to workflow inputs
+ * and outputs, and collects diagnostics for unsupported or inconsistent references.
+ *
+ * @param node Subworkflow node to normalize.
+ * @param subworkflowFilePath Target file path of the generated subworkflow CWL document.
+ * @return Normalized workflow result containing the generated subworkflow document,
+ *         child files and collected diagnostics.
+ */
 export function normalizeSubworkflowNode(
   node: SubworkflowNode,
   subworkflowFilePath: string

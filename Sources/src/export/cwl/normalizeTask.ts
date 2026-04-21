@@ -1,4 +1,13 @@
-import type { TaskNode } from '../../editor/state/model';
+/**
+ * @file normalizeTask.ts
+ * @brief Normalizes task nodes into an intermediate CWL CommandLineTool representation.
+ *
+ * This file transforms a task node from the internal workflow model into a normalized
+ * structure suitable for later rendering as a CWL CommandLineTool document.
+ * It also produces identifier mappings and diagnostics needed by higher export layers.
+ */
+
+import type { TaskNode } from '../../domain/workflow/model/model';
 
 import type {
   TaskNormalizationResult,
@@ -17,6 +26,17 @@ import {
 
 import { error } from './diagnostics';
 
+/**
+ * @brief Normalizes a task node into a CWL CommandLineTool-compatible structure.
+ *
+ * The normalization process converts task parameters into CWL inputs,
+ * output ports into CWL outputs, collects environment variables and builds
+ * mapping tables between original workflow identifiers and exported CWL identifiers.
+ * Any invalid or incomplete references are reported as export diagnostics.
+ *
+ * @param node Task node to normalize.
+ * @return Normalized task export result containing the tool document, identifier mappings and diagnostics.
+ */
 export function normalizeTaskNode(node: TaskNode): TaskNormalizationResult {
   const diagnostics = [];
   const usedInputIds = new Set<string>();

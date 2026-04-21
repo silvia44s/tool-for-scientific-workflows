@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_test_slurm_single_task_bash",
+  "name": "Test Slurm Single Task Bash",
+  "run": {
+    "resultsRoot": "runs/test_slurm_single_task_bash/results",
+    "backend": "slurm"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "task",
+      "name": "Bash Echo",
+      "position": {
+        "x": 200,
+        "y": 120
+      },
+      "task": {
+        "config": {
+          "binaryPath": "/bin/bash",
+          "workdir": "work/bash_echo",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_cmd",
+            "name": "command",
+            "flag": "-lc",
+            "kind": "string",
+            "value": "echo Hello from workflow editor",
+            "required": true,
+            "description": "Command executed by bash"
+          }
+        ],
+        "environment": {
+          "variables": [
+            {
+              "id": "env_1",
+              "key": "TEST_ENV",
+              "value": "ok"
+            }
+          ],
+          "modules": [
+            "GCC/9.3.0"
+          ],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": []
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 512,
+          "timeMin": 10,
+          "partitionOrQueue": "qcpu",
+          "account": "OPEN-30-42",
+          "qos": "",
+          "array": {
+            "enabled": false
+          },
+          "customDirectives": "",
+          "prologue": "export OMP_PROC_BIND=true\nexport OMP_PLACES=cores",
+          "epilogue": "echo \"Task finished.\""
+        }
+      }
+    }
+  },
+  "edges": {}
+}

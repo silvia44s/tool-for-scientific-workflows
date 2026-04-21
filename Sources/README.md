@@ -122,7 +122,7 @@ Current backend dependencies:
 ## Running the backend server
 Start the FastAPI server:
 ```bash
-uvicorn workflow_backend.main:app --reload
+uvicorn workflow_backend.api:app --reload
 ```
 
 The backend will start on:
@@ -139,7 +139,7 @@ http://127.0.0.1:8000
 ```bash
 cd backend
 source venv/bin/activate
-uvicorn workflow_backend.main:app --reload
+uvicorn workflow_backend.api:app --reload
 ```
 
 **2.** Start the frontend

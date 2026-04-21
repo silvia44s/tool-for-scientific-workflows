@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_test_pbs_single_task_bash",
+  "name": "Test PBS Single Task Bash",
+  "run": {
+    "resultsRoot": "runs/test_pbs_single_task_bash/results",
+    "backend": "pbs"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "task",
+      "name": "Bash Echo",
+      "position": {
+        "x": 200,
+        "y": 120
+      },
+      "task": {
+        "config": {
+          "binaryPath": "/bin/bash",
+          "workdir": "work/bash_echo",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_cmd",
+            "name": "command",
+            "flag": "-lc",
+            "kind": "string",
+            "value": "echo Hello from workflow editor",
+            "required": true,
+            "description": "Command executed by bash"
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": []
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 512,
+          "timeMin": 10,
+          "partitionOrQueue": "default",
+          "account": "my_project",
+          "qos": "",
+          "array": {
+            "enabled": false
+          },
+          "customDirectives": "",
+          "prologue": "echo \"Starting PBS task\"",
+          "epilogue": "echo \"Finished PBS task\""
+        }
+      }
+    }
+  },
+  "edges": {}
+}

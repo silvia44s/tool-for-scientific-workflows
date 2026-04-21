@@ -1,0 +1,357 @@
+/**
+ * @file TopBar.module.css
+ * @brief Styles for the top bar component.
+ * @author Silvia Šlachtovská
+ *.
+ */
+
+.root {
+  position: absolute;
+  top: 18px;
+  right: 30px; 
+  z-index: 30;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+}
+
+.btn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: none;
+
+  background: #E0E0FF;
+  color: #573A70;
+
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.btn:hover {
+  background: #afafd4;
+}
+
+.groupBtn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: none;
+
+  background: #bac3ee ;
+  color: #573A70;
+
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.runBtn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: none;
+
+  background: #C1EFAF;
+  color: #295020;
+
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.runBtn:hover {
+  background: rgb(172, 237, 146);
+}
+
+.iconBtn {
+  width: 38px;
+  height: 36px;
+  border-radius: 10px;
+
+  background: rgb(147, 0, 10, 0.30);
+  border: none;
+
+  display: grid;
+  place-items: center;
+  color: #93000A;
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.iconBtn:hover {
+  background: rgb(147, 0, 10, 0.50);
+}
+
+.iconBtnArrow {
+  width: 38px;
+  height: 36px;
+  border-radius: 10px;
+
+  background: #565992;
+
+  display: grid;
+  place-items: center;
+  border: none;
+
+  color: #E0E0FF;
+
+  cursor: pointer;
+  box-shadow: 3px 4px 10px  rgba(0, 0, 0, 0.4);
+}
+
+.iconBtnArrow:hover {
+  background: #414477;
+}
+
+.icon {
+  width: 19px;
+  height: 19px;
+  stroke-width: 2;
+}
+
+.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.hiddenFile {
+  display: none;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 30, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modalCard {
+  width: min(720px, 100%);
+  max-height: 85vh;
+  overflow: auto;
+  background: #f6f4ff;
+  color: #1b1d3b;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(90, 90, 140, 0.15);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 12px;
+  border-bottom: 1px solid rgba(90, 90, 140, 0.12);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modalCloseBtn {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+  color: #44476a;
+}
+
+.modalBody {
+  padding: 16px 20px;
+}
+
+.modalMessage {
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.modalMeta {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.modalSectionLabel {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #24273f;
+}
+
+.modalPre {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: #ece9ff;
+  color: #2e245c;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 20px 18px;
+  gap: 10px;
+}
+
+.modalOkBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: #11144b;
+  color: #f1dbff;
+  font-weight: 600;
+}
+
+.modalOkBtn:hover {
+  background: #04051a;
+}
+
+.modalClsBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: #951f1f;
+  color: #f1dbff;
+  font-weight: 600;
+}
+
+.modalClsBtn:hover {
+  background: #5c0f0f;
+}
+
+.undoToast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-width: 220px;
+  max-width: 360px;
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  background: rgba(48, 43, 92, 0.96);
+  color: #ffffff;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
+  opacity: 0.90;
+}
+
+.undoToastText {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.undoToastBtn {
+  border: none;
+  background: transparent;
+  color: #c7ff9e;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+
+.undoToastBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.undoToastBtn:focus-visible {
+  outline: 2px solid #c7ff9e;
+  outline-offset: 2px;
+}
+
+.dropdownContent {
+  min-width: 140px;
+  background:  rgb(237, 225, 245);
+  border: 1px solid rgb(233, 216, 245);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 12px 30px rgba(37, 24, 74, 0.16);
+  z-index: 1000;
+}
+
+.dropdownItem {
+  font-size: 14px;
+  color: #11144B;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+  font-weight: 600;
+}
+
+.dropdownItem:hover,
+.dropdownItem[data-highlighted] {
+  background: rgb(231, 209, 246);
+}
+
+.dropdownSeparator {
+  height: 1px;
+  background: rgb(231, 209, 246);
+  margin: 6px 0;
+}
+
+.dropdownDanger {
+  color: #c23b3b;
+}
+
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 33, 0.38);
+  z-index: 1100;
+}
+
+.modalFieldsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 55%;
+}
+
+.modalLabel {
+  font-size: 14px;
+  color: #4f5378;
+  min-width: 80px;
+  font-weight: 600;
+}
+
+.modalInput {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #d0cce6;
+  background: #f6f4ff;
+  color: #1b1d3b;
+}
+
+.modalInput:focus {
+  outline: 2px solid #c1a7e0;
+  outline-offset: 2px;
+}

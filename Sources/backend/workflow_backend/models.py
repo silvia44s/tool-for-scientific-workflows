@@ -1,10 +1,11 @@
 """
-Data models for the workflow document.
+@file models.py
+@author Silvia Šlachtovská
+@brief Pydantic data models describing the workflow document structure.
 
-These models describe the structure of the workflow JSON that comes
-from the frontend. Pydantic is used here mainly for validation and
-automatic parsing.
-
+These models define the JSON format exchanged between the frontend editor
+and the backend. They are used for parsing, validation and typed access to
+workflow nodes, edges, task configuration and runtime settings.
 """
 
 from __future__ import annotations

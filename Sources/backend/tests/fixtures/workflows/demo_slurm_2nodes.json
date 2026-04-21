@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_test_slurm_two_tasks",
+  "name": "demo slurm2",
+  "run": {
+    "backend": "slurm"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "task",
+      "name": "Prepare Input",
+      "position": {
+        "x": 120,
+        "y": 120
+      },
+      "task": {
+        "config": {
+          "binaryPath": "/bin/bash",
+          "workdir": "work/prepare_input",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p1_cmd",
+            "name": "command",
+            "flag": "-lc",
+            "kind": "string",
+            "value": "echo 'first task finished' > prepared.txt",
+            "required": true,
+            "description": "Create a simple output file"
+          },
+          {
+            "id": "p1_out",
+            "name": "out",
+            "flag": "",
+            "kind": "file",
+            "value": "prepared.txt",
+            "required": true,
+            "description": "Produced file",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [
+            {
+              "id": "env_1",
+              "key": "TEST_STEP",
+              "value": "prepare"
+            }
+          ],
+          "modules": [
+            "GCC/9.3.0"
+          ],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_prepared",
+              "name": "prepared.txt",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p1_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 512,
+          "timeMin": 10,
+          "partitionOrQueue": "qcpu",
+          "account": "OPEN-30-42",
+          "qos": "",
+          "array": {
+            "enabled": false
+          },
+          "customDirectives": "",
+          "prologue": "export OMP_PROC_BIND=true\nexport OMP_PLACES=cores",
+          "epilogue": "echo \"Prepare Input done.\""
+        }
+      }
+    },
+    "node_2": {
+      "id": "node_2",
+      "type": "task",
+      "name": "Consume Input",
+      "position": {
+        "x": 520,
+        "y": 120
+      },
+      "task": {
+        "config": {
+          "binaryPath": "/bin/bash",
+          "workdir": "work/consume_input",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p2_cmd",
+            "name": "command",
+            "flag": "-lc",
+            "kind": "string",
+            "value": "echo 'second task started'; ls -l; echo 'done' > result.txt",
+            "required": true,
+            "description": "Simple second-step command"
+          },
+          {
+            "id": "p2_input",
+            "name": "input",
+            "flag": "--input",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input file from previous task",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p2_out",
+            "name": "out",
+            "flag": "",
+            "kind": "file",
+            "value": "result.txt",
+            "required": true,
+            "description": "Produced result file",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [
+            {
+              "id": "env_2",
+              "key": "TEST_STEP",
+              "value": "consume"
+            }
+          ],
+          "modules": [
+            "GCC/9.3.0"
+          ],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_input_file",
+              "name": "input file",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p2_input"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_result",
+              "name": "result.txt",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p2_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 512,
+          "timeMin": 10,
+          "partitionOrQueue": "qcpu",
+          "account": "OPEN-30-42",
+          "qos": "",
+          "array": {
+            "enabled": false
+          },
+          "customDirectives": "",
+          "prologue": "echo \"Starting second task\"",
+          "epilogue": "echo \"Consume Input done.\""
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_1": {
+      "id": "edge_1",
+      "source": "node_1",
+      "target": "node_2",
+      "sourceHandle": "out_prepared",
+      "targetHandle": "in_input_file"
+    }
+  }
+}

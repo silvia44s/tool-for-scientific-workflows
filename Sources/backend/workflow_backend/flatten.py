@@ -1,3 +1,13 @@
+"""
+@file flatten.py
+@author Silvia Šlachtovská
+@brief Utilities for flattening nested workflows into a single executable graph.
+
+This module transforms workflow documents containing subworkflows into a flat
+workflow representation containing only task nodes and concrete edges between
+their ports. It also builds boundary mappings so parent workflows can connect
+to nested inputs and outputs consistently.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,6 +24,13 @@ from workflow_backend.models import (
 
 @dataclass
 class FlattenedSubworkflow:
+    """
+    @brief Internal flattened representation of a workflow subtree.
+
+    Stores the flattened task nodes and edges produced from a workflow or
+    subworkflow, together with mappings that describe how exposed boundary
+    ports connect to the flattened internal task endpoints.
+    """
     nodes: Dict[str, TaskNode]
     edges: Dict[str, WorkflowEdge]
 
@@ -25,10 +42,30 @@ class FlattenedSubworkflow:
 
 
 def _pref(prefix: str, value: str) -> str:
+    """
+    @brief Builds a prefixed identifier for flattened workflow objects.
+
+    Prefixes nested node and edge identifiers using a double-underscore
+    separator so the flattened graph keeps stable and unique IDs.
+
+    @param prefix Current parent prefix.
+    @param value Local identifier to prefix.
+    @return Prefixed identifier or the original value if the prefix is empty.
+    """
     return f"{prefix}__{value}" if prefix else value
 
 
 def flatten_workflow(workflow: WorkflowDoc) -> WorkflowDoc:
+    """
+    @brief Flattens a workflow document containing nested subworkflows.
+
+    Produces a new workflow document with the same top-level metadata but with
+    all nested subworkflow contents expanded into a single graph of task nodes
+    and concrete edges.
+
+    @param workflow Workflow document to flatten.
+    @return Flattened workflow document ready for validation and execution planning.
+    """
     flat = _flatten_workflow_doc(workflow, prefix="")
 
     return WorkflowDoc(
@@ -46,6 +83,17 @@ def _wrap_subworkflow_interface(
     inner: FlattenedSubworkflow,
     prefix: str,
 ) -> FlattenedSubworkflow:
+    """
+    @brief Rebuilds boundary port mappings for a flattened subworkflow node.
+
+    Converts the internal flattened mappings of a nested subworkflow so they
+    match the boundary port identifiers exposed by the containing subworkflow node.
+
+    @param node Original subworkflow node containing boundary definitions.
+    @param inner Flattened representation of the nested workflow body.
+    @param prefix Prefix assigned to the current subworkflow instance.
+    @return Flattened subworkflow with remapped boundary input and output maps.
+    """
     wrapped_input_map: Dict[str, List[Tuple[str, str]]] = {}
     wrapped_output_map: Dict[str, Tuple[str, str]] = {}
 
@@ -74,6 +122,18 @@ def _wrap_subworkflow_interface(
 
 
 def _flatten_workflow_doc(workflow: WorkflowDoc, prefix: str) -> FlattenedSubworkflow:
+    """
+    @brief Recursively flattens one workflow level and all nested subworkflows.
+
+    The function expands nested subworkflows into task nodes, rewrites edge
+    endpoints to reference flattened task ports and builds interface mappings
+    that allow parent workflows to connect to exposed boundary ports.
+
+    @param workflow Workflow document to flatten.
+    @param prefix Prefix applied to identifiers at the current nesting level.
+    @return Flattened workflow subtree including nodes, edges and boundary maps.
+    @raises ValueError If an edge references a missing node or unresolved boundary port.
+    """
     flat_nodes: Dict[str, TaskNode] = {}
     flat_edges: Dict[str, WorkflowEdge] = {}
 
@@ -183,6 +243,20 @@ def _resolve_source_endpoint(
     prefix: str,
     flattened_subs: Dict[str, FlattenedSubworkflow],
 ) -> List[Tuple[str, str | None]]:
+    """
+    @brief Resolves the flattened source endpoint for an edge source.
+
+    Task nodes resolve directly to their prefixed output handle. Subworkflow
+    nodes resolve through their flattened boundary output mapping.
+
+    @param node Source workflow node.
+    @param node_id Source node identifier at the current workflow level.
+    @param handle Source port handle.
+    @param prefix Current nesting prefix.
+    @param flattened_subs Already flattened nested subworkflows on this level.
+    @return List containing the resolved flattened source endpoint.
+    @raises ValueError If a subworkflow source handle is missing or unmapped.
+    """
     if node.type == "task":
         return [(_pref(prefix, node_id), handle)]
 
@@ -206,6 +280,21 @@ def _resolve_target_endpoint(
     prefix: str,
     flattened_subs: Dict[str, FlattenedSubworkflow],
 ) -> List[Tuple[str, str | None]]:
+    """
+    @brief Resolves flattened target endpoints for an edge target.
+
+    Task nodes resolve directly to their prefixed input handle. Subworkflow
+    nodes may resolve to one or more internal flattened task inputs through
+    their boundary input mapping.
+
+    @param node Target workflow node.
+    @param node_id Target node identifier at the current workflow level.
+    @param handle Target port handle.
+    @param prefix Current nesting prefix.
+    @param flattened_subs Already flattened nested subworkflows on this level.
+    @return List of resolved flattened target endpoints.
+    @raises ValueError If a subworkflow target handle is missing or unmapped.
+    """
     if node.type == "task":
         return [(_pref(prefix, node_id), handle)]
 
@@ -214,7 +303,6 @@ def _resolve_target_endpoint(
 
     flattened = flattened_subs[node_id]
     mapped = flattened.input_map.get(handle)
-    print("RESOLVE TARGET", node_id, handle, flattened.input_map)
     if not mapped:
         raise ValueError(
             f"Subworkflow '{node_id}' target port '{handle}' has no boundary input mapping."

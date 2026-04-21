@@ -1,5 +1,10 @@
 """
-PBS script generator.
+@file pbs_script.py
+@author Silvia Šlachtovská
+@brief Generates PBS job and submission scripts from an execution plan.
+
+This module converts workflow execution steps into PBS batch scripts and
+creates a wrapper submission script that submits the jobs in dependency order.
 """
 
 from __future__ import annotations
@@ -12,16 +17,34 @@ from workflow_backend.generate.execution_planner import ExecutionPlan, Execution
 
 
 def _q(value: str) -> str:
+    """
+    @brief Quotes a value for safe shell usage.
+
+    @param value Raw shell argument.
+    @return Shell-escaped value.
+    """
     return shlex.quote(value)
 
 
 def _sanitize(value: str) -> str:
+    """
+    @brief Converts a string into a filesystem-safe PBS job name fragment.
+
+    @param value Input string.
+    @return Sanitized identifier suitable for filenames and job names.
+    """
     s = value.strip().replace(" ", "_")
     s = "".join(ch for ch in s if ch.isalnum() or ch in ("_", "-", "."))
     return s or "job"
 
 
 def _minutes_to_hms(total_minutes: int | None) -> str | None:
+    """
+    @brief Converts minutes into PBS walltime format.
+
+    @param total_minutes Duration in minutes.
+    @return Time string in HH:MM:SS format or None if the input is None.
+    """
     if total_minutes is None:
         return None
     hours = total_minutes // 60
@@ -30,6 +53,15 @@ def _minutes_to_hms(total_minutes: int | None) -> str | None:
 
 
 def _collect_output_dirs(step: ExecutionStep) -> List[str]:
+    """
+    @brief Collects output directories that should exist before task execution.
+
+    Derives parent directories from resolved task outputs and ignores URLs
+    and empty values.
+
+    @param step Execution step whose outputs should be inspected.
+    @return Sorted list of unique output directories.
+    """
     dirs = set()
     for out_value in step.outputs.values():
         if not out_value or "://" in out_value:
@@ -42,6 +74,16 @@ def _collect_output_dirs(step: ExecutionStep) -> List[str]:
 
 
 def render_pbs_job(step: ExecutionStep, logs_dir: str) -> str:
+    """
+    @brief Renders one complete PBS job script.
+
+    Includes scheduler directives, environment preparation, optional module
+    loading, user prologue and epilogue blocks and the final task command.
+
+    @param step Execution step to convert into a PBS job.
+    @param logs_dir Directory used for stdout and stderr log files.
+    @return Full PBS job script content.
+    """
     b = step.batch
     lines: List[str] = []
 
@@ -140,6 +182,16 @@ def render_pbs_job(step: ExecutionStep, logs_dir: str) -> str:
 
 
 def generate_pbs_scripts(plan: ExecutionPlan, outdir: str) -> str:
+    """
+    @brief Generates PBS job scripts and a wrapper submit script.
+
+    Creates one .pbs file per execution step and a submit_pbs.sh script that
+    submits jobs in dependency order using PBS afterok dependencies.
+
+    @param plan Execution plan to convert.
+    @param outdir Target workflow run directory.
+    @return Path to the generated submit script.
+    """
     root = Path(outdir)
     jobs_dir = root / "jobs"
     logs_dir = root / "results" / "logs"

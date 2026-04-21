@@ -34,10 +34,14 @@ __pycache__/
 backend/runs/
 
 # Tests
-backend/tests/
 *.egg-info/
 
 test-results/
 
 workflow-editor.tar
 workflow-editor.tar
+
+Doxyfile
+.docs/
+
+typedoc.json
