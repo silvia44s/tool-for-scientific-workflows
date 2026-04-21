@@ -34,5 +34,30 @@ __pycache__/
 backend/runs/
 
 # Tests
-backend/tests/
 *.egg-info/
+
+test-results/
+
+workflow-editor.tar
+workflow-editor.tar
+
+Doxyfile
+.docs/
+
+typedoc.json
+
+# Python virtual envs
+venv/
+backend/venv/
+
+# Coverage / pytest
+.coverage
+backend/.coverage
+.pytest_cache/
+backend/.pytest_cache/
+
+# Generated docs
+docs-ts/
+
+# Mac / Windows junk
+*Zone.Identifier

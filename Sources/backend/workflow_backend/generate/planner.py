@@ -1,12 +1,11 @@
 """
-Simple task planner for workflows.
+@file planner.py
+@author Silvia Šlachtovská
+@brief Task dependency planner for workflow execution.
 
-The job of this module is basically:
-1. build a graph of task dependencies
-2. detect obvious problems (missing nodes, cycles)
-3. produce a valid execution order of tasks
-
-
+This module builds a dependency graph between workflow task nodes,
+detects invalid references and cycles, and produces a deterministic
+topological execution order for the executable tasks in the workflow.
 """
 
 from __future__ import annotations
@@ -16,14 +15,17 @@ from typing import Dict, List, Set, Tuple, Iterable
 
 
 class PlanError(Exception):
-    """Base exception for planning errors."""
+    """
+    @brief Base exception for workflow planning errors.
+    """
 
 
 class UnknownNodeError(PlanError):
     """
-    Raised when an edge references a node that does not exist.
+    @brief Raised when an edge references a node that does not exist.
 
-    This usually means the workflow JSON is inconsistent.
+    This usually indicates an inconsistent workflow graph where an edge
+    points to a missing source or target node.
     """
     def __init__(self, edge_id: str, which: str, node_id: str) -> None:
         super().__init__(f"Edge '{edge_id}' references unknown {which} node '{node_id}'.")
@@ -31,10 +33,10 @@ class UnknownNodeError(PlanError):
 
 class CycleError(PlanError):
     """
-    Raised when the workflow graph contains a cycle.
+    @brief Raised when the workflow graph contains a dependency cycle.
 
-    Workflows are expected to be DAGs (directed acyclic graphs),
-    so cycles would break execution ordering.
+    Workflow execution order is computed under the assumption that the task
+    graph is acyclic. A cycle makes topological ordering impossible.
     """
     def __init__(self, cycle_nodes: List[str]) -> None:
         msg = "Workflow graph contains a cycle. Involved nodes: " + " -> ".join(cycle_nodes)
@@ -45,32 +47,39 @@ class CycleError(PlanError):
 @dataclass(frozen=True)
 class PlannedTask:
     """
-    Minimal representation of a planned task.
+    @brief Minimal representation of a task scheduled for execution.
 
-    At the moment it only stores the node id,
-    but it could later include more info (command, env, etc.).
+    Currently stores only the task node identifier produced by the planner,
+    but may later be extended with additional execution-related metadata.
     """
     node_id: str
 
 
 def _stable_sorted(items: Iterable[str]) -> List[str]:
     """
-    Small helper to keep ordering deterministic.
+    @brief Returns items in deterministic sorted order.
 
-    Sorting ensures the same workflow always produces
-    the same execution order across runs.
+    Sorting is used to keep planning results stable across runs when multiple
+    valid traversal orders are possible.
+
+    @param items Iterable of node identifiers.
+    @return Sorted list of identifiers.
     """
     return sorted(items)
 
 
 def build_task_graph(workflow) -> Tuple[List[str], Dict[str, Set[str]], Dict[str, Set[str]]]:
     """
-    Build a dependency graph between tasks.
+    @brief Builds the task dependency graph from a workflow document.
 
-    Returns:
-        task_ids : list of all task nodes
-        succ     : adjacency list (node -> successors)
-        pred     : reverse adjacency (node -> predecessors)
+    Extracts task nodes from the workflow and creates forward and reverse
+    adjacency mappings based on workflow edges. Edges referencing missing
+    nodes are rejected. Edges touching non-task nodes are ignored.
+
+    @param workflow Workflow document to analyze.
+    @return Tuple containing the list of task ids, successor mapping and
+        predecessor mapping.
+    @raises UnknownNodeError If an edge references a missing source or target node.
     """
     nodes = workflow.nodes
     edges = workflow.edges
@@ -108,13 +117,15 @@ def build_task_graph(workflow) -> Tuple[List[str], Dict[str, Set[str]], Dict[str
 
 def topological_order(workflow) -> List[str]:
     """
-    Compute execution order using Kahn's algorithm.
+    @brief Computes a deterministic topological execution order of tasks.
 
-    If a cycle exists, the algorithm cannot finish and
-    we raise CycleError.
+    Uses Kahn's algorithm to order task nodes according to their dependencies.
+    If the workflow contains a cycle, planning fails with a CycleError.
 
-    Returns:
-        List of node ids in execution order.
+    @param workflow Workflow document to plan.
+    @return List of task node identifiers in execution order.
+    @raises UnknownNodeError If an edge references a missing node.
+    @raises CycleError If the workflow graph contains a cycle.
     """
     task_ids, succ, pred = build_task_graph(workflow)
 
@@ -147,8 +158,14 @@ def topological_order(workflow) -> List[str]:
 
 def plan_tasks(workflow) -> List[PlannedTask]:
     """
-    High-level planner entry point.
+    @brief Produces planned task objects for workflow execution.
 
-    Converts node ordering into PlannedTask objects.
+    Converts the computed topological ordering of task node identifiers into
+    PlannedTask instances used by later execution-planning steps.
+
+    @param workflow Workflow document to plan.
+    @return List of planned tasks in execution order.
+    @raises UnknownNodeError If an edge references a missing node.
+    @raises CycleError If the workflow graph contains a cycle.
     """
     return [PlannedTask(node_id=nid) for nid in topological_order(workflow)]

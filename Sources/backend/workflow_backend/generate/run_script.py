@@ -1,12 +1,11 @@
 """
-Shell script generator.
+@file run_script.py
+@author Silvia Šlachtovská
+@brief Generates a local bash run script from an execution plan.
 
-This module takes an ExecutionPlan and converts it into a runnable
-bash script. Each workflow step becomes one bash block.
-
-The idea is simple:
-ExecutionPlan → bash script → executed by backend.
-
+This module converts workflow execution steps into a single runnable shell
+script used for local backend execution. Each step is emitted as an isolated
+subshell block with its own working directory, environment and command.
 """
 
 from pathlib import Path
@@ -18,69 +17,25 @@ from workflow_backend.generate.execution_planner import ExecutionPlan
 
 def _q(value: str) -> str:
     """
-    Quote a value for safe usage in bash.
-    Prevents problems with spaces or special characters.
+    @brief Quotes a value for safe shell usage.
+
+    @param value Raw shell argument.
+    @return Shell-escaped value.
     """
     return shlex.quote(value)
 
 
-def _is_probably_path(value: str) -> bool:
-    """
-    Small heuristic to guess whether a value looks like a filesystem path.
-
-    Not perfect but works well enough for most cases.
-
-    Rules:
-    - URLs are not paths
-    - strings with '/' or starting with '.' probably are paths
-    """
-    if not value:
-        return False
-    if "://" in value:
-        return False
-    return "/" in value or value.startswith(".")
-
-
-def _collect_output_parent_dirs(plan: ExecutionPlan) -> List[str]:
-    """
-    Collect all directories that should exist before running tasks.
-
-    For each output value we create its parent directory.
-    """
-    dirs: Set[str] = set()
-
-    for step in plan.steps:
-        for value in step.outputs.values():
-            if not value or "://" in value:
-                continue
-
-            p = Path(value)
-
-            # if it looks like a directory we still create parent safely
-            parent = p if value.endswith("/") else p.parent
-            if str(parent).strip():
-                dirs.add(str(parent))
-
-    return sorted(dirs)
-
-
 def generate_run_script(plan: ExecutionPlan, outfile: str) -> None:
     """
-    Convert execution plan into a bash script.
+    @brief Generates a local bash script for workflow execution.
 
-    Structure of generated script roughly:
+    Converts each execution step into an isolated subshell block that prepares
+    its working directory, creates output directories, exports environment
+    variables, loads modules and runs the final command.
 
-        step1:
-            cd workdir
-            export env
-            module load ...
-            command
-
-        step2:
-            ...
-
-    Each step runs in its own subshell so environment changes
-    do not leak to the next step.
+    @param plan Execution plan to convert.
+    @param outfile Target path of the generated shell script.
+    @return None
     """
     lines: List[str] = []
 

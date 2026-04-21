@@ -1,0 +1,116 @@
+/**
+ * @brief Base styles for workflow canvas nodes.
+ * @author Silvia Šlachtovská
+ *
+ * Defines the foundational styling for all node types in the workflow canvas, including:
+ * - overall node appearance (borders, shadows, fonts)
+ * - header layout and typography
+ * - subtitle and port row styling
+ * - visual feedback for selected nodes
+ *
+ * This module serves as a common stylesheet that can be extended by specific node types (e.g., TaskNode, SubworkflowNode) to maintain a consistent look and feel across the editor.
+ */
+.root {
+  width: max-content;
+  border-radius: 18px;
+  overflow: hidden;
+  opacity: 0.9;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  border: 2px solid rgba(0,0,0,0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.selected {
+  border: 3px solid rgba(84, 80, 152, 0.9);
+  box-shadow:
+    0 0 0 4px rgba(99, 102, 241, 0.35),
+    0 0 12px rgba(99, 102, 241, 0.95),
+    0 0 24px rgba(99, 102, 241, 0.95);
+  opacity: 1;
+}
+
+.header {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  color: white;
+}
+
+.headerTitle {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.subtitleRow {
+  padding: 10px 15px;
+  border-top: 2px solid rgba(0,0,0,0.18);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 420px;
+}
+
+.subtitleLabel {
+  font-weight: 800;
+  font-size: 18px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.subtitleValue {
+  font-size: 18px;
+  font-weight: 800;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.ports {
+  border-top: 2px solid rgba(0,0,0,0.18);
+}
+
+.portRow {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 25px 5px 25px;
+  border-top: 2px solid rgba(0,0,0,0.12);
+}
+
+.portLabel {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.portName {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.portType {
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+.handle {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+}
+
+.portRow :global(.react-flow__handle-left) {
+  left: 2px;
+}
+
+.portRow :global(.react-flow__handle-right) {
+  right: 2px;
+}

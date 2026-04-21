@@ -1,0 +1,24 @@
+/**
+ * @brief React component for rendering a task node within the workflow canvas.
+ * @author Silvia Šlachtovská
+ *
+ * This component is responsible for displaying a task node, which represents an individual task or operation within the workflow. It provides a visual representation of the task, including its name, parameters, and ports for connecting to other nodes.
+ *
+ * The component uses styles defined in 'TaskNode.module.css' to ensure a consistent and visually appealing design that distinguishes task nodes from other types of nodes in the workflow editor.
+ */
+.root {
+  min-width: 240px;
+  background: #d6d4de;
+}
+
+.header {
+  background: radial-gradient(circle at 30% 30%, #553F78, #6E116E);
+}
+
+.subtitleRow {
+  background: #9e91d433;
+}
+
+.portRow {
+  background: rgba(158, 145, 212, 0.2);
+}

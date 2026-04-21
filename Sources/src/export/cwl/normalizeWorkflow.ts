@@ -1,4 +1,14 @@
-import type { Workflow } from '../../editor/state/model';
+/**
+ * @file normalizeWorkflow.ts
+ * @brief Normalizes a workflow into intermediate CWL workflow documents and generated files.
+ *
+ * This file transforms the internal workflow model into a normalized representation
+ * suitable for later rendering as CWL Workflow and CommandLineTool documents.
+ * It resolves step identifiers, workflow inputs and outputs, edge-based connections
+ * and collects diagnostics produced during normalization.
+ */
+
+import type { Workflow } from '../../domain/workflow/model/model';
 import type {
   WorkflowNormalizationResult,
   WorkflowStepInfo,
@@ -21,6 +31,17 @@ import {
   topologicallyOrderNodeIds
 } from './utils';
 
+/**
+ * @brief Normalizes a workflow into an intermediate CWL workflow representation.
+ *
+ * The normalization process converts all workflow nodes into steps, generates
+ * referenced child files for tasks and subworkflows, resolves edge-based data flow,
+ * derives root workflow inputs and outputs, and gathers export diagnostics.
+ *
+ * @param workflow Workflow to normalize.
+ * @return Normalized workflow export result containing the root workflow document,
+ *         generated files and collected diagnostics.
+ */
 export function normalizeWorkflow(workflow: Workflow): WorkflowNormalizationResult {
   const diagnostics = [];
   const files: WorkflowNormalizationResult['files'] = [];

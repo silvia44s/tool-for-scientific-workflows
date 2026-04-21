@@ -1,0 +1,518 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_demo_pairs",
+  "name": "demo_subworkflow",
+  "run": {
+    "resultsRoot": "results",
+    "backend": "local"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "task",
+      "position": {
+        "x": -700,
+        "y": -100
+      },
+      "name": "Generate A",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Sources/backend/tests/demo_numbers/tools/gen_numbers.py",
+          "workdir": "work/gen_a",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p1_start",
+            "name": "start",
+            "flag": "--start",
+            "kind": "number",
+            "value": "1",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p1_end",
+            "name": "end",
+            "flag": "--end",
+            "kind": "number",
+            "value": "5",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p1_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/a.txt",
+            "required": true,
+            "description": "",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_p1_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p1_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_2": {
+      "id": "node_2",
+      "type": "task",
+      "position": {
+        "x": -700,
+        "y": 200
+      },
+      "name": "Generate B",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Sources/backend/tests/demo_numbers/tools/gen_numbers.py",
+          "workdir": "work/gen_b",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p2_start",
+            "name": "start",
+            "flag": "--start",
+            "kind": "number",
+            "value": "10",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p2_end",
+            "name": "end",
+            "flag": "--end",
+            "kind": "number",
+            "value": "14",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p2_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/b.txt",
+            "required": true,
+            "description": "",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_p2_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p2_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_5": {
+      "id": "node_5",
+      "type": "task",
+      "position": {
+        "x": 850,
+        "y": 50
+      },
+      "name": "Summarize pairs",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Sources/backend/tests/demo_pairs/tools/summarize_pairs.py",
+          "workdir": "work/summarize_pairs",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p5_input",
+            "name": "input",
+            "flag": "--input",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p5_report",
+            "name": "report",
+            "flag": "--report",
+            "kind": "file",
+            "value": "out/report.json",
+            "required": true,
+            "description": "",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_p5_input",
+              "name": "--input",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p5_input"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_p5_report",
+              "name": "--report",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p5_report"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "subworkflow_ec031fc83ba8e8_1776694540264": {
+      "id": "subworkflow_ec031fc83ba8e8_1776694540264",
+      "type": "subworkflow",
+      "name": "New subworkflow",
+      "description": "Nested workflow",
+      "position": {
+        "x": 100,
+        "y": 50
+      },
+      "subworkflow": {
+        "workflow": {
+          "schemaVersion": 1,
+          "id": "wf_d021d1644dcfe_1776694540264",
+          "name": "Nested workflow",
+          "run": {
+            "resultsRoot": "results",
+            "backend": "local"
+          },
+          "canvas": {
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "zoom": 1
+            }
+          },
+          "nodes": {
+            "node_3": {
+              "id": "node_3",
+              "type": "task",
+              "position": {
+                "x": -150,
+                "y": 50
+              },
+              "name": "Merge pairs",
+              "task": {
+                "config": {
+                  "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Sources/backend/tests/demo_pairs/tools/merge_pairs.py",
+                  "workdir": "work/merge_pairs",
+                  "argsTemplate": ""
+                },
+                "params": [
+                  {
+                    "id": "p3_left",
+                    "name": "left",
+                    "flag": "--left",
+                    "kind": "file",
+                    "value": "",
+                    "required": true,
+                    "description": "",
+                    "exposeAsInput": true
+                  },
+                  {
+                    "id": "p3_right",
+                    "name": "right",
+                    "flag": "--right",
+                    "kind": "file",
+                    "value": "",
+                    "required": true,
+                    "description": "",
+                    "exposeAsInput": true
+                  },
+                  {
+                    "id": "p3_out",
+                    "name": "out",
+                    "flag": "--out",
+                    "kind": "file",
+                    "value": "out/pairs.txt",
+                    "required": true,
+                    "description": "",
+                    "exposeAsOutput": true
+                  }
+                ],
+                "environment": {
+                  "variables": [],
+                  "modules": [],
+                  "libraries": []
+                },
+                "io": {
+                  "inputs": [
+                    {
+                      "id": "in_p3_left",
+                      "name": "--left",
+                      "direction": "input",
+                      "dataType": "file",
+                      "inputBind": {
+                        "kind": "param",
+                        "paramId": "p3_left"
+                      }
+                    },
+                    {
+                      "id": "in_p3_right",
+                      "name": "--right",
+                      "direction": "input",
+                      "dataType": "file",
+                      "inputBind": {
+                        "kind": "param",
+                        "paramId": "p3_right"
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "out_p3_out",
+                      "name": "--out",
+                      "direction": "output",
+                      "dataType": "file",
+                      "outputSource": {
+                        "kind": "fromParam",
+                        "paramId": "p3_out"
+                      }
+                    }
+                  ]
+                },
+                "batch": {
+                  "array": {
+                    "enabled": false
+                  }
+                }
+              }
+            },
+            "node_4": {
+              "id": "node_4",
+              "type": "task",
+              "position": {
+                "x": 350,
+                "y": 50
+              },
+              "name": "Scale pairs",
+              "task": {
+                "config": {
+                  "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Sources/backend/tests/demo_pairs/tools/scale_pairs.py",
+                  "workdir": "work/scale_pairs",
+                  "argsTemplate": ""
+                },
+                "params": [
+                  {
+                    "id": "p4_input",
+                    "name": "input",
+                    "flag": "--input",
+                    "kind": "file",
+                    "value": "",
+                    "required": true,
+                    "description": "",
+                    "exposeAsInput": true
+                  },
+                  {
+                    "id": "p4_factor",
+                    "name": "factor",
+                    "flag": "--factor",
+                    "kind": "number",
+                    "value": "3",
+                    "required": true,
+                    "description": "External scale factor"
+                  },
+                  {
+                    "id": "p4_out",
+                    "name": "out",
+                    "flag": "--out",
+                    "kind": "file",
+                    "value": "out/scaled_pairs.txt",
+                    "required": true,
+                    "description": "",
+                    "exposeAsOutput": true
+                  }
+                ],
+                "environment": {
+                  "variables": [],
+                  "modules": [],
+                  "libraries": []
+                },
+                "io": {
+                  "inputs": [
+                    {
+                      "id": "in_p4_input",
+                      "name": "--input",
+                      "direction": "input",
+                      "dataType": "file",
+                      "inputBind": {
+                        "kind": "param",
+                        "paramId": "p4_input"
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "out_p4_out",
+                      "name": "--out",
+                      "direction": "output",
+                      "dataType": "file",
+                      "outputSource": {
+                        "kind": "fromParam",
+                        "paramId": "p4_out"
+                      }
+                    }
+                  ]
+                },
+                "batch": {
+                  "array": {
+                    "enabled": false
+                  }
+                }
+              }
+            }
+          },
+          "edges": {
+            "edge_3": {
+              "id": "edge_3",
+              "source": "node_3",
+              "target": "node_4",
+              "sourceHandle": "out_p3_out",
+              "targetHandle": "in_p4_input"
+            }
+          }
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "sw_in_4741583153b818_1776694540264",
+              "name": "--left",
+              "direction": "input",
+              "dataType": "file"
+            },
+            {
+              "id": "sw_in_bb2faf45b7005_1776694540264",
+              "name": "--right",
+              "direction": "input",
+              "dataType": "file"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "sw_out_fe03aa6992f33_1776694540264",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file"
+            }
+          ]
+        },
+        "boundary": {
+          "inputs": [
+            {
+              "portId": "sw_in_4741583153b818_1776694540264",
+              "targetNodeId": "node_3",
+              "targetPortId": "in_p3_left"
+            },
+            {
+              "portId": "sw_in_bb2faf45b7005_1776694540264",
+              "targetNodeId": "node_3",
+              "targetPortId": "in_p3_right"
+            }
+          ],
+          "outputs": [
+            {
+              "portId": "sw_out_fe03aa6992f33_1776694540264",
+              "sourceNodeId": "node_4",
+              "sourcePortId": "out_p4_out"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_374e9fa7e13678_1776694540264": {
+      "id": "edge_374e9fa7e13678_1776694540264",
+      "source": "node_1",
+      "target": "subworkflow_ec031fc83ba8e8_1776694540264",
+      "sourceHandle": "out_p1_out",
+      "targetHandle": "sw_in_4741583153b818_1776694540264"
+    },
+    "edge_0e6a3adb2d2398_1776694540264": {
+      "id": "edge_0e6a3adb2d2398_1776694540264",
+      "source": "node_2",
+      "target": "subworkflow_ec031fc83ba8e8_1776694540264",
+      "sourceHandle": "out_p2_out",
+      "targetHandle": "sw_in_bb2faf45b7005_1776694540264"
+    },
+    "edge_7fbea4dfc55918_1776694540264": {
+      "id": "edge_7fbea4dfc55918_1776694540264",
+      "source": "subworkflow_ec031fc83ba8e8_1776694540264",
+      "target": "node_5",
+      "sourceHandle": "sw_out_fe03aa6992f33_1776694540264",
+      "targetHandle": "in_p5_input"
+    }
+  }
+}

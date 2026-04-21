@@ -1,0 +1,22 @@
+#!/bin/bash
+#PBS -N Bash_Echo
+#PBS -o /app/logs/node_1.log
+#PBS -e /app/logs/node_1.err
+#PBS -l select=1:ncpus=1:mem=512mb
+#PBS -l walltime=00:10:00
+#PBS -q default
+#PBS -A my_project
+
+set -euo pipefail
+cd "${PBS_O_WORKDIR}"
+
+mkdir -p "/app/results/work/bash_echo"
+cd "/app/results/work/bash_echo"
+
+# user prologue
+echo "Starting PBS task"
+
+/bin/bash -lc 'echo Hello from workflow editor'
+
+# user epilogue
+echo "Finished PBS task"

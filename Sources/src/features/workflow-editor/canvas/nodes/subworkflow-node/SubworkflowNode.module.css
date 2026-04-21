@@ -1,0 +1,24 @@
+/**
+ * @brief React component for rendering a subworkflow node within the workflow canvas.
+ * @author Silvia Šlachtovská
+ *
+ * This component is responsible for displaying a subworkflow node, which represents a nested workflow within the main workflow. It provides a visual representation of the subworkflow and allows users to interact with it, such as opening the subworkflow to view its contents or editing its properties.
+ *
+ * The component uses styles defined in 'SubworkflowNode.module.css' to ensure a consistent and visually appealing design that distinguishes subworkflow nodes from other types of nodes in the workflow editor.
+ */
+.root {
+  min-width: 300px;
+  background: #e3e8ff;
+}
+
+.header {
+  background: radial-gradient(circle at 30% 30%, #4f9f8c, #5481d4);
+}
+
+.subtitleRow {
+  background: #c8d2ff59;
+}
+
+.portRow {
+  background: rgba(200, 210, 255, 0.35);
+}

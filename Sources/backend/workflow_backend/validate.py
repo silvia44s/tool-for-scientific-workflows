@@ -1,14 +1,12 @@
 """
-Validation helpers for workflow documents.
+@file validate.py
+@author Silvia Šlachtovská
+@brief Validation helpers for workflow documents.
 
-This file checks whether the workflow makes sense before execution.
-So not just JSON shape validation, but also things like:
-- edge references
-- port compatibility
-- duplicate connections
-- required params
-- broken param/port bindings
-- basic batch config sanity
+This module performs semantic validation of workflow documents before
+execution. In addition to JSON shape validation handled by Pydantic, it
+checks graph consistency, port compatibility, parameter correctness,
+task configuration and basic batch scheduler settings.
 """
 
 from __future__ import annotations
@@ -42,12 +40,15 @@ class WorkflowValidationError(Exception):
 
 def _validate_batch_config(task: TaskNode, issues: List[ValidationIssue], backend: str) -> None:
     """
-    Validate batch config sanity.
+    @brief Validates scheduler-related batch configuration for one task.
 
-    This is intentionally lightweight:
-    - numeric values should be positive
-    - array settings should make sense
-    - custom directive lines should roughly look like scheduler directives
+    Performs lightweight sanity checks for numeric resource values, batch array
+    settings, custom scheduler directives and optional prologue/epilogue fields.
+
+    @param task Task node whose batch configuration is being validated.
+    @param issues List collecting discovered validation issues.
+    @param backend Selected workflow execution backend.
+    @return None
     """
     batch = task.task.batch
     arr = batch.array
@@ -158,19 +159,15 @@ def _validate_batch_config(task: TaskNode, issues: List[ValidationIssue], backen
 
 def validate_workflow(wf: WorkflowDoc) -> None:
     """
-    Main workflow validation entry point.
+    @brief Performs semantic validation of a flattened workflow document.
 
-    This does a couple of checks:
-    - basic workflow sanity
-    - edge references to existing nodes/ports
-    - duplicate or invalid connections
-    - simple type compatibility between ports
-    - task param validation
-    - input/output port binding checks
-    - basic task config validation
-    - batch config validation
+    Checks workflow-level configuration, edge references, port compatibility,
+    duplicate connections, parameter values, task input/output bindings and
+    basic backend-specific batch configuration.
 
-    Raises WorkflowValidationError if anything is wrong.
+    @param wf Flattened workflow document to validate.
+    @return None
+    @raises WorkflowValidationError If one or more validation issues are found.
     """
     issues: list[ValidationIssue] = []
 
@@ -361,10 +358,13 @@ def validate_workflow(wf: WorkflowDoc) -> None:
 
 def _is_compatible(src: PortDataType, dst: PortDataType) -> bool:
     """
-    Simple port compatibility check.
+    @brief Checks whether two port data types are compatible.
 
-    Right now this is strict equality only.
-    Could be extended later if some implicit conversions make sense.
+    The current implementation requires exact type equality.
+
+    @param src Source port data type.
+    @param dst Target port data type.
+    @return True if the connection is valid, otherwise False.
     """
     return src == dst
 
@@ -376,16 +376,17 @@ def _validate_params(
     issues: List[ValidationIssue],
 ) -> None:
     """
-    Validate task params one by one.
+    @brief Validates parameter values and requiredness for a task.
 
-    Checks mainly:
-    - required params
-    - numeric values
-    - bool values
-    - choice membership
+    Ensures that required parameters are satisfied either by a direct value
+    or by an incoming edge through a bound input port, and checks parameter
+    values against their declared kinds.
 
-    A required param is also considered satisfied if its matching
-    input port has an incoming edge.
+    @param task Task node whose parameters are being validated.
+    @param params Parameters indexed by parameter id.
+    @param incoming_to_input Set of already connected task input ports.
+    @param issues List collecting discovered validation issues.
+    @return None
     """
     input_port_by_param_id: Dict[str, IOPort] = {}
 

@@ -1,16 +1,12 @@
 """
-Execution planner.
+@file execution_planner.py
+@author Silvia Šlachtovská
+@brief Builds concrete runtime execution plans for validated workflows.
 
-This module converts a validated workflow + ordered tasks
-into a concrete execution plan.
-
-Basically it resolves:
-- final parameter values
-- outputs of tasks
-- data propagation along edges
-- final argv for execution
-
-The result is a list of steps that can later be turned into a shell script.
+This module converts a validated workflow and a topologically ordered list
+of task identifiers into execution-ready steps. It resolves parameter values,
+task outputs, propagated edge values, command-line arguments and per-task
+runtime metadata needed for script generation.
 """
 
 from __future__ import annotations
@@ -29,11 +25,11 @@ from workflow_backend.models import WorkflowDoc, TaskNode, WorkflowEdge, IOPort,
 @dataclass(frozen=True)
 class ExecutionStep:
     """
-    Represents one executable step in the workflow.
+    @brief Fully resolved executable step for one workflow task.
 
-    This is already "runtime-ready":
-    it contains resolved parameters, environment,
-    final argv and output paths.
+    Stores the runtime-ready representation of a task including resolved
+    environment variables, command-line arguments, output values, batch
+    configuration and task dependencies.
     """
     node_id: str
     name: str
@@ -55,8 +51,10 @@ class ExecutionStep:
 @dataclass(frozen=True)
 class ExecutionPlan:
     """
-    Full execution plan for the workflow.
-    Essentially just a list of ordered ExecutionSteps.
+    @brief Full execution plan for a workflow run.
+
+    Contains workflow-level runtime metadata together with the ordered list
+    of fully resolved execution steps.
     """
     workflow_id: str
     workflow_name: str
@@ -71,8 +69,13 @@ class ExecutionPlan:
 
 def _slug(s: str) -> str:
     """
-    Turn a name into something filesystem-safe.
-    Mostly used for generating output directories/files.
+    @brief Converts a string into a filesystem-safe identifier fragment.
+
+    Used mainly for generating output directory and file names from task
+    and port names.
+
+    @param s Input string.
+    @return Sanitized string safe for filesystem usage.
     """
     s = s.strip().replace(" ", "_")
     return "".join(ch for ch in s if ch.isalnum() or ch in ("_", "-", ".")) or "task"
@@ -80,7 +83,14 @@ def _slug(s: str) -> str:
 
 def _get_task(wf: WorkflowDoc, node_id: str) -> TaskNode:
     """
-    Fetch task node and fail if it does not exist.
+    @brief Returns a task node by id.
+
+    Ensures that the referenced node exists and is a task node.
+
+    @param wf Workflow document containing the node graph.
+    @param node_id Identifier of the requested node.
+    @return Matching task node.
+    @raises KeyError If the node does not exist or is not a task node.
     """
     n = wf.nodes.get(node_id)
     if n is None or getattr(n, "type", None) != "task":
@@ -88,16 +98,14 @@ def _get_task(wf: WorkflowDoc, node_id: str) -> TaskNode:
     return n
 
 
-def _task_param_map(task: TaskNode) -> Dict[str, TaskParam]:
-    """
-    Helper to build param lookup table.
-    """
-    return {p.id: p for p in task.task.params}
-
-
 def _find_port(task: TaskNode, direction: str, port_id: str) -> Optional[IOPort]:
     """
-    Find port by id on a task.
+    @brief Finds a task input or output port by identifier.
+
+    @param task Task node to inspect.
+    @param direction Port direction, expected to be "input" or "output".
+    @param port_id Identifier of the requested port.
+    @return Matching port object or None if the port does not exist.
     """
     ports = task.task.io.outputs if direction == "output" else task.task.io.inputs
     for p in ports:
@@ -113,10 +121,16 @@ def _default_output_path(
     data_type: str,
 ) -> Optional[str]:
     """
-    Generate default output path if user did not provide one.
+    @brief Generates a default output path for a task output port.
 
-    Example:
-        results/task_name/output_name.out
+    File outputs are assigned a default file path and directory outputs are
+    assigned a default directory path under the workflow results root.
+
+    @param results_root Root directory for workflow results.
+    @param task_name Name of the producing task.
+    @param port_name Name of the output port.
+    @param data_type Declared output port data type.
+    @return Generated output path or None if no results root is available.
     """
     if not results_root:
         return None
@@ -132,12 +146,14 @@ def _default_output_path(
 
 def _resolve_path(results_root: Optional[str], value: str) -> str:
     """
-    Resolve user-provided path.
+    @brief Resolves a configured path into its runtime form.
 
-    Rules:
-    - absolute paths stay absolute
-    - URLs stay unchanged
-    - relative paths are resolved relative to results_root
+    Absolute paths are preserved, URLs remain unchanged and relative paths
+    are resolved against the workflow results root when available.
+
+    @param results_root Root directory for workflow results.
+    @param value Configured path value.
+    @return Resolved path string.
     """
     v = (value or "").strip()
     if v == "":
@@ -160,9 +176,13 @@ def _initial_resolved_param_values(
     wf: WorkflowDoc,
 ) -> Dict[Tuple[str, str], str]:
     """
-    Prepare initial parameter values before edge propagation.
+    @brief Initializes resolved task parameter values before edge propagation.
 
-    Only file/directory parameters are path-resolved here.
+    Reads parameter values directly from task definitions and resolves file
+    and directory values against the workflow results root where needed.
+
+    @param wf Workflow document to inspect.
+    @return Mapping from (node id, param id) to the initial resolved value.
     """
     results_root = getattr(getattr(wf, "run", None), "resultsRoot", None)
     resolved: Dict[Tuple[str, str], str] = {}
@@ -198,7 +218,18 @@ def _resolve_output_value(
     results_root: Optional[str],
 ) -> str:
     """
-    Determine value produced by an output port.
+    @brief Resolves the concrete runtime value produced by one output port.
+
+    Output values are derived either from an explicitly configured source,
+    from a referenced parameter value or from an auto-generated default
+    output path for file and directory outputs.
+
+    @param wf Workflow document being planned.
+    @param task Producing task node.
+    @param out_port Output port to resolve.
+    @param resolved_param_values Already resolved parameter values.
+    @param results_root Root directory for workflow results.
+    @return Resolved output value for the port.
     """
     src = out_port.outputSource
 
@@ -232,7 +263,17 @@ def _apply_edge_transfer(
     resolved_param_values: Dict[Tuple[str, str], str],
 ) -> None:
     """
-    Transfer data from source output port to target input parameter.
+    @brief Propagates a resolved output value across one workflow edge.
+
+    If the edge connects a source output port to a target input port bound
+    to a parameter, the resolved source output value is copied into the
+    target parameter value table.
+
+    @param wf Workflow document containing the edge endpoints.
+    @param edge Workflow edge describing the transfer.
+    @param computed_outputs Already resolved task output values.
+    @param resolved_param_values Mutable table of resolved parameter values.
+    @return None
     """
     if not edge.sourceHandle or not edge.targetHandle:
         return
@@ -256,6 +297,28 @@ def _apply_edge_transfer(
     resolved_param_values[(edge.target, bind.paramId)] = out_val
 
 
+def _resolve_binary_path(binary: str) -> str:
+    """
+    @brief Resolves the executable path used for a task command.
+
+    Preserves the configured binary path in general, but prefers a matching
+    deployed demo script from /app/demo_scripts when available.
+
+    @param binary Configured binary or script path.
+    @return Resolved executable path.
+    """
+    v = (binary or "").strip()
+    if not v:
+        return v
+
+    p = Path(v)
+    demo_candidate = Path("/app/demo_scripts") / p.name
+
+    if demo_candidate.exists():
+        return str(demo_candidate)
+
+    return v
+
 # -----------------------------
 # Build argv for task
 # -----------------------------
@@ -265,13 +328,20 @@ def _build_argv(
     resolved_param_values: Dict[Tuple[str, str], str],
 ) -> List[str]:
     """
-    Construct final command-line arguments.
+    @brief Builds the final command-line argument vector for a task.
 
-    Example output:
-        [binaryPath, --flag1, value1, --flag2, value2]
+    Resolves the executable path and appends task parameters according to
+    their configured flags, kinds and resolved runtime values.
+
+    @param task Task node to convert into a command line.
+    @param resolved_param_values Table of resolved parameter values.
+    @return Final argv list ready for script generation or execution.
     """
     argv: List[str] = []
-    binary = task.task.config.binaryPath.strip()
+    binary = _resolve_binary_path(task.task.config.binaryPath.strip())
+
+    if binary.endswith(".py"):
+        argv.append("python3")
     argv.append(binary)
 
     for p in task.task.params:
@@ -300,6 +370,16 @@ def _build_argv(
 
 
 def _dependencies_for_node(wf: WorkflowDoc, node_id: str) -> List[str]:
+    """
+    @brief Collects direct upstream task dependencies for a node.
+
+    Dependencies are derived from incoming workflow edges whose source differs
+    from the target node.
+
+    @param wf Workflow document containing the edge graph.
+    @param node_id Identifier of the node whose dependencies should be collected.
+    @return Sorted list of unique upstream node identifiers.
+    """
     deps = []
     for e in wf.edges.values():
         if e.target == node_id and e.source != node_id:
@@ -312,13 +392,15 @@ def _dependencies_for_node(wf: WorkflowDoc, node_id: str) -> List[str]:
 
 def build_execution_plan(wf: WorkflowDoc, ordered_task_ids: List[str]) -> ExecutionPlan:
     """
-    Build the full execution plan for a workflow.
+    @brief Builds the full runtime execution plan for a workflow.
 
-    Steps:
-    1. initialize param values
-    2. compute outputs of tasks
-    3. propagate values along edges
-    4. build ExecutionStep objects
+    Initializes task parameter values, resolves output values, propagates
+    data across workflow edges and produces ordered execution steps with
+    fully prepared runtime metadata and command-line arguments.
+
+    @param wf Validated workflow document.
+    @param ordered_task_ids Task node identifiers in execution order.
+    @return Fully resolved execution plan for script generation or execution.
     """
     results_root = getattr(getattr(wf, "run", None), "resultsRoot", None)
 

@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_invalid_missing_port",
+  "name": "invalid_missing_port",
+  "run": {
+    "resultsRoot": "results",
+    "backend": "local"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "task",
+      "name": "Generate numbers",
+      "position": { "x": 0, "y": 0 },
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Sources/backend/tests/demo_numbers/tools/gen_numbers.py",
+          "workdir": "work/gen_numbers",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p1_start",
+            "kind": "number",
+            "name": "start",
+            "flag": "--start",
+            "value": "1",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p1_end",
+            "kind": "number",
+            "name": "end",
+            "flag": "--end",
+            "value": "5",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p1_out",
+            "kind": "file",
+            "name": "out",
+            "flag": "--out",
+            "value": "out/numbers.txt",
+            "required": true,
+            "description": "",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_p1_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p1_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": { "enabled": false }
+        }
+      }
+    },
+    "node_2": {
+      "id": "node_2",
+      "type": "task",
+      "name": "Multiply numbers",
+      "position": { "x": 300, "y": 0 },
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Sources/backend/tests/demo_numbers/tools/multiply_numbers.py",
+          "workdir": "work/multiply",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p2_in",
+            "kind": "file",
+            "name": "input",
+            "flag": "--input",
+            "value": "",
+            "required": true,
+            "description": "",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p2_factor",
+            "kind": "number",
+            "name": "factor",
+            "flag": "--factor",
+            "value": "10",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p2_out",
+            "kind": "file",
+            "name": "out",
+            "flag": "--out",
+            "value": "out/multiplied.txt",
+            "required": true,
+            "description": "",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_p2_in",
+              "name": "--input",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p2_in"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_p2_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p2_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": { "enabled": false }
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_1": {
+      "id": "edge_1",
+      "source": "node_1",
+      "target": "node_2",
+      "sourceHandle": "out_p1_out",
+      "targetHandle": "in_p2_does_not_exist"
+    }
+  }
+}

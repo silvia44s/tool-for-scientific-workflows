@@ -1,6 +1,24 @@
+/**
+ * @file renderCommandLineTool.ts
+ * @brief Renders a normalized CommandLineTool document into CWL YAML text.
+ *
+ * This file converts the intermediate normalized representation of a task node
+ * into a textual CWL CommandLineTool document. The renderer emits YAML structure
+ * for metadata, environment variables, inputs and outputs.
+ */
+
 import type { NormalizedCommandLineTool } from './types';
 import { yamlScalar } from './utils';
 
+/**
+ * @brief Converts a normalized CommandLineTool document into CWL YAML text.
+ *
+ * The renderer serializes the command line tool structure including label,
+ * base command, environment variables, input definitions and output bindings.
+ *
+ * @param doc Normalized CommandLineTool document to render.
+ * @return CWL YAML string representing the command line tool.
+ */
 export function renderCommandLineTool(doc: NormalizedCommandLineTool): string {
   const lines: string[] = [];
 

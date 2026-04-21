@@ -1,0 +1,107 @@
+/**
+ * @brief Overlay component for displaying and editing the contents of a subworkflow node.
+ * @author Silvia Šlachtovská
+ *
+ * Provides an interface for users to interact with the subworkflow's internal structure, allowing them to:
+ * - view and edit the nodes contained within the subworkflow,
+ * - manage connections between these nodes,
+ * - navigate back to the parent workflow.
+ */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 10, 35, 0.42);
+  backdrop-filter: blur(3px);
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: 85%;
+  height: 80%;
+  border-radius: 22px;
+  overflow: hidden;
+  background-color: rgb(245, 247, 255, 0.8);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(193, 239, 175, 0.15);
+  background: none;
+  height: 30px;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #11144B;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actionBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: #E0E0FF;
+  background-color: #573A70;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.actionBtn:hover {
+  background: #414477;
+}
+
+.canvasWrap {
+  flex: 1;
+  min-height: 0;
+}
+
+.overlay {
+  animation: overlayFade 160ms ease;
+}
+
+.card {
+  animation: overlayScale 160ms ease;
+}
+
+@keyframes overlayFade {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes overlayScale {
+  from {
+    transform: scale(0.96);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

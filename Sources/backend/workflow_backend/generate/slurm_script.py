@@ -1,9 +1,11 @@
 """
-Slurm script generator.
+@file slurm_script.py
+@author Silvia Šlachtovská
+@brief Generates Slurm job and submission scripts from an execution plan.
 
-Generates:
-- one .sbatch job script per workflow step
-- one submit_slurm.sh script that submits jobs with dependencies
+This module converts workflow execution steps into individual Slurm batch
+scripts and creates a wrapper submission script that submits the jobs in
+dependency order.
 """
 
 from __future__ import annotations
@@ -16,16 +18,33 @@ from workflow_backend.generate.execution_planner import ExecutionPlan, Execution
 
 
 def _q(value: str) -> str:
+    """
+    @brief Quotes a value for safe shell usage.
+
+    @param value Raw shell argument.
+    @return Shell-escaped value.
+    """
     return shlex.quote(value)
 
 
 def _sanitize(value: str) -> str:
+    """
+    @brief Converts a string into a filesystem-safe Slurm job name fragment.
+
+    @param value Input string.
+    @return Sanitized identifier suitable for filenames and job names.
+    """
     s = value.strip().replace(" ", "_")
     s = "".join(ch for ch in s if ch.isalnum() or ch in ("_", "-", "."))
     return s or "job"
 
-
 def _minutes_to_slurm_time(total_minutes: int | None) -> str | None:
+    """
+    @brief Converts minutes into Slurm time format.
+
+    @param total_minutes Duration in minutes.
+    @return Time string in H:M:S format or None if the input is None.
+    """
     if total_minutes is None:
         return None
     hours = total_minutes // 60
@@ -34,6 +53,15 @@ def _minutes_to_slurm_time(total_minutes: int | None) -> str | None:
 
 
 def _collect_output_dirs(step: ExecutionStep) -> List[str]:
+    """
+    @brief Collects output directories that should exist before task execution.
+
+    Derives parent directories from resolved task outputs and ignores URLs
+    and empty values.
+
+    @param step Execution step whose outputs should be inspected.
+    @return Sorted list of unique output directories.
+    """
     dirs = set()
     for out_value in step.outputs.values():
         if not out_value or "://" in out_value:
@@ -46,6 +74,16 @@ def _collect_output_dirs(step: ExecutionStep) -> List[str]:
 
 
 def _render_scheduler_directives(step: ExecutionStep, logs_dir: str) -> List[str]:
+    """
+    @brief Renders the Slurm scheduler header for one job script.
+
+    Includes resource requests, logging paths, optional array settings and
+    custom scheduler directives derived from the step batch configuration.
+
+    @param step Execution step to render.
+    @param logs_dir Directory used for stdout and stderr log files.
+    @return List of Slurm header lines.
+    """
     b = step.batch
     lines: List[str] = []
 
@@ -104,6 +142,16 @@ def _render_scheduler_directives(step: ExecutionStep, logs_dir: str) -> List[str
 
 
 def _render_shell_body(step: ExecutionStep) -> List[str]:
+    """
+    @brief Renders the executable shell body for one Slurm job.
+
+    Prepares the working directory, creates output directories, exports
+    environment variables, loads modules, applies optional prologue and
+    epilogue code and appends the final command.
+
+    @param step Execution step to render.
+    @return List of shell body lines.
+    """
     b = step.batch
     lines: List[str] = []
 
@@ -156,6 +204,15 @@ def _render_shell_body(step: ExecutionStep) -> List[str]:
 
 
 def render_slurm_job(step: ExecutionStep, logs_dir: str) -> str:
+    """
+    @brief Renders one complete Slurm job script.
+
+    Combines scheduler directives and shell body into a single script text.
+
+    @param step Execution step to convert into a Slurm job.
+    @param logs_dir Directory used for stdout and stderr log files.
+    @return Full Slurm job script content.
+    """
     lines: List[str] = []
     lines.extend(_render_scheduler_directives(step, logs_dir))
     lines.extend(_render_shell_body(step))
@@ -163,6 +220,16 @@ def render_slurm_job(step: ExecutionStep, logs_dir: str) -> str:
 
 
 def generate_slurm_scripts(plan: ExecutionPlan, outdir: str) -> str:
+    """
+    @brief Generates Slurm job scripts and a wrapper submit script.
+
+    Creates one .sbatch file per execution step and a submit_slurm.sh script
+    that submits jobs in dependency order using afterok relationships.
+
+    @param plan Execution plan to convert.
+    @param outdir Target workflow run directory.
+    @return Path to the generated submit script.
+    """
     root = Path(outdir)
     jobs_dir = root / "jobs"
     logs_dir = root / "results" / "logs"
