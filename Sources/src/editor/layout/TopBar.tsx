@@ -18,11 +18,16 @@ import { useWorkflowState } from '../state/workflowState';
 import { getActiveWorkflow, createInitialWorkflow } from '../state/workflowUtils';
 import toast from 'react-hot-toast';
 
+import { exportWorkflowAsCwl } from '../../export/cwl';
+import { downloadCwlBundleZip } from '../../export/cwl/downloadBundle';
+
 import {
   TrashIcon,
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
 } from '@heroicons/react/24/outline';
+
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 
 /**
@@ -115,14 +120,32 @@ export function TopBar() {
   }
 
   /**
-   * Export current workflow as JSON file.
+   * Export current workflow as JSON or CWL file.
    */
-  function onSaveAs() {
+  function onSaveAsJson() {
     downloadJson(`${state.workflow.name || 'workflow'}.json`, state.workflow);
     markSaved();
-    toast.success('Workflow saved');
+    toast.success('Workflow saved as JSON');
   }
 
+  async function onSaveAsCwl() {
+    const result = exportWorkflowAsCwl(state.workflow);
+
+    if (!result.ok) {
+      toast.error(result.diagnostics[0]?.message ?? 'CWL export failed');
+      return;
+    }
+
+    try {
+      await downloadCwlBundleZip(
+        result.bundle,
+        `${state.workflow.name || 'workflow'}_cwl.zip`
+      );
+      toast.success('CWL zip exported');
+    } catch {
+      toast.error('Failed to download CWL bundle');
+    }
+  }
 
   /**
    * Open hidden file input for workflow import.
@@ -454,9 +477,41 @@ useEffect(() => {
         </button>
 
         {/* export workflow */}
-        <button type="button" className={styles.btn} onClick={onSaveAs} title="Save workflow as JSON file">
-          SAVE
-        </button>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button
+              type="button"
+              className={styles.btn}
+              title="Save workflow"
+            >
+              SAVE AS
+            </button>
+          </DropdownMenu.Trigger>
+
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              className={styles.dropdownContent}
+              sideOffset={8}
+              align="start"
+            >
+              <DropdownMenu.Item
+                className={styles.dropdownItem}
+                onSelect={onSaveAsJson}
+              >
+                Save as JSON
+              </DropdownMenu.Item>
+
+              <DropdownMenu.Item
+                className={styles.dropdownItem}
+                onSelect={() => {
+                  void onSaveAsCwl();
+                }}
+              >
+                Save as CWL (.zip)
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
 
 
         {/* import workflow */}

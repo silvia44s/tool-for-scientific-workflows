@@ -1,0 +1,9 @@
+{
+  "count": 5,
+  "left_sum": 45,
+  "right_sum": 180,
+  "left_min": 3,
+  "left_max": 15,
+  "right_min": 30,
+  "right_max": 42
+}
