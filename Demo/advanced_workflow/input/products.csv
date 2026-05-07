@@ -1,0 +1,7 @@
+id,name,category,price,quantity
+1,Apple,fruit,1.20,10
+2,Banana,fruit,0.80,15
+3,Carrot,vegetable,0.50,20
+4,Tomato,vegetable,1.10,12
+5,Bread,bakery,2.30,5
+6,Milk,dairy,1.50,8

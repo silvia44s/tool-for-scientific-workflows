@@ -1,0 +1,692 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_advanced_7nodes",
+  "name": "advanced_7nodes",
+  "run": {
+    "resultsRoot": "/home/silvia/workflow_editor/workflow-editor/runs/advanced_7nodes_20260507_140403/results",
+    "backend": "local"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_a": {
+      "id": "node_a",
+      "type": "task",
+      "position": {
+        "x": -261.1210989910544,
+        "y": 369.9076155289349
+      },
+      "name": "A - Prepare input data",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/tools/prepare_input.sh",
+          "workdir": "work/prepare_input",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_a_src",
+            "name": "src",
+            "flag": "--src",
+            "kind": "file",
+            "value": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/input/products.csv",
+            "required": true,
+            "description": "External CSV input file"
+          },
+          {
+            "id": "p_a_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/products_raw.csv",
+            "required": true,
+            "description": "Copied workflow input",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_a_products",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p_a_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_f": {
+      "id": "node_f",
+      "type": "task",
+      "position": {
+        "x": 934.5605494955271,
+        "y": 353.627965048085
+      },
+      "name": "F - Merge summary",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/tools/merge_summary.py",
+          "workdir": "work/merge_summary",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_f_stats",
+            "name": "stats",
+            "flag": "--stats",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input from node D",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p_f_validation",
+            "name": "validation",
+            "flag": "--validation",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input from node E",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p_f_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/summary.txt",
+            "required": true,
+            "description": "Merged summary",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_f_stats",
+              "name": "--stats",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p_f_stats"
+              }
+            },
+            {
+              "id": "in_f_validation",
+              "name": "--validation",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p_f_validation"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_f_summary",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p_f_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_g": {
+      "id": "node_g",
+      "type": "task",
+      "position": {
+        "x": 1554.967523558237,
+        "y": 381.25593009617
+      },
+      "name": "G - Generate report",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/tools/generate_report.sh",
+          "workdir": "work/generate_report",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_g_summary",
+            "name": "summary",
+            "flag": "--summary",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input from node F",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p_g_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/final_report.txt",
+            "required": true,
+            "description": "Final report",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_g_summary",
+              "name": "--summary",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p_g_summary"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_g_report",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p_g_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "subworkflow_9dd1a9e14e85f8_1778155341878": {
+      "id": "subworkflow_9dd1a9e14e85f8_1778155341878",
+      "type": "subworkflow",
+      "name": "Operations",
+      "description": "Nested workflow",
+      "position": {
+        "x": 399.6740012168891,
+        "y": 356.91916358781805
+      },
+      "subworkflow": {
+        "workflow": {
+          "schemaVersion": 1,
+          "id": "wf_b328cbb0df5c1_1778155341878",
+          "name": "Nested workflow",
+          "run": {
+            "resultsRoot": "/home/silvia/workflow_editor/workflow-editor/runs/advanced_7nodes/results",
+            "backend": "local"
+          },
+          "canvas": {
+            "viewport": {
+              "x": 0,
+              "y": 0,
+              "zoom": 1
+            }
+          },
+          "nodes": {
+            "node_b": {
+              "id": "node_b",
+              "type": "task",
+              "position": {
+                "x": 209.3476903003214,
+                "y": 60.88327087734132
+              },
+              "name": "B - Normalize products",
+              "task": {
+                "config": {
+                  "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/tools/normalize_products.py",
+                  "workdir": "work/normalize_products",
+                  "argsTemplate": ""
+                },
+                "params": [
+                  {
+                    "id": "p_b_input",
+                    "name": "input",
+                    "flag": "--input",
+                    "kind": "file",
+                    "value": "",
+                    "required": true,
+                    "description": "Input from node A",
+                    "exposeAsInput": true
+                  },
+                  {
+                    "id": "p_b_out",
+                    "name": "out",
+                    "flag": "--out",
+                    "kind": "file",
+                    "value": "out/products_normalized.csv",
+                    "required": true,
+                    "description": "Normalized products",
+                    "exposeAsOutput": true
+                  }
+                ],
+                "environment": {
+                  "variables": [],
+                  "modules": [],
+                  "libraries": []
+                },
+                "io": {
+                  "inputs": [
+                    {
+                      "id": "in_b_products",
+                      "name": "--input",
+                      "direction": "input",
+                      "dataType": "file",
+                      "inputBind": {
+                        "kind": "param",
+                        "paramId": "p_b_input"
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "out_b_normalized",
+                      "name": "--out",
+                      "direction": "output",
+                      "dataType": "file",
+                      "outputSource": {
+                        "kind": "fromParam",
+                        "paramId": "p_b_out"
+                      }
+                    }
+                  ]
+                },
+                "batch": {
+                  "array": {
+                    "enabled": false
+                  }
+                }
+              }
+            },
+            "node_c": {
+              "id": "node_c",
+              "type": "task",
+              "position": {
+                "x": 23.9057427281939,
+                "y": 644.5131087261674
+              },
+              "name": "C - Extract categories",
+              "task": {
+                "config": {
+                  "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/tools/extract_categories.sh",
+                  "workdir": "work/extract_categories",
+                  "argsTemplate": ""
+                },
+                "params": [
+                  {
+                    "id": "p_c_input",
+                    "name": "input",
+                    "flag": "--input",
+                    "kind": "file",
+                    "value": "",
+                    "required": true,
+                    "description": "Input from node A",
+                    "exposeAsInput": true
+                  },
+                  {
+                    "id": "p_c_out",
+                    "name": "out",
+                    "flag": "--out",
+                    "kind": "file",
+                    "value": "out/categories.csv",
+                    "required": true,
+                    "description": "Category counts",
+                    "exposeAsOutput": true
+                  }
+                ],
+                "environment": {
+                  "variables": [],
+                  "modules": [],
+                  "libraries": []
+                },
+                "io": {
+                  "inputs": [
+                    {
+                      "id": "in_c_products",
+                      "name": "--input",
+                      "direction": "input",
+                      "dataType": "file",
+                      "inputBind": {
+                        "kind": "param",
+                        "paramId": "p_c_input"
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "out_c_categories",
+                      "name": "--out",
+                      "direction": "output",
+                      "dataType": "file",
+                      "outputSource": {
+                        "kind": "fromParam",
+                        "paramId": "p_c_out"
+                      }
+                    }
+                  ]
+                },
+                "batch": {
+                  "array": {
+                    "enabled": false
+                  }
+                }
+              }
+            },
+            "node_d": {
+              "id": "node_d",
+              "type": "task",
+              "position": {
+                "x": 727.627965048085,
+                "y": 41.81335825712884
+              },
+              "name": "D - Compute sales statistics",
+              "task": {
+                "config": {
+                  "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/tools/compute_sales.py",
+                  "workdir": "work/compute_sales",
+                  "argsTemplate": ""
+                },
+                "params": [
+                  {
+                    "id": "p_d_input",
+                    "name": "input",
+                    "flag": "--input",
+                    "kind": "file",
+                    "value": "",
+                    "required": true,
+                    "description": "Input from node B",
+                    "exposeAsInput": true
+                  },
+                  {
+                    "id": "p_d_out",
+                    "name": "out",
+                    "flag": "--out",
+                    "kind": "file",
+                    "value": "out/sales_stats.txt",
+                    "required": true,
+                    "description": "Computed statistics",
+                    "exposeAsOutput": true
+                  }
+                ],
+                "environment": {
+                  "variables": [],
+                  "modules": [],
+                  "libraries": []
+                },
+                "io": {
+                  "inputs": [
+                    {
+                      "id": "in_d_normalized",
+                      "name": "--input",
+                      "direction": "input",
+                      "dataType": "file",
+                      "inputBind": {
+                        "kind": "param",
+                        "paramId": "p_d_input"
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "out_d_stats",
+                      "name": "--out",
+                      "direction": "output",
+                      "dataType": "file",
+                      "outputSource": {
+                        "kind": "fromParam",
+                        "paramId": "p_d_out"
+                      }
+                    }
+                  ]
+                },
+                "batch": {
+                  "array": {
+                    "enabled": false
+                  }
+                }
+              }
+            },
+            "node_e": {
+              "id": "node_e",
+              "type": "task",
+              "position": {
+                "x": 637.8146067909562,
+                "y": 680.4669164906347
+              },
+              "name": "E - Validate categories",
+              "task": {
+                "config": {
+                  "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/tools/validate_categories.sh",
+                  "workdir": "work/validate_categories",
+                  "argsTemplate": ""
+                },
+                "params": [
+                  {
+                    "id": "p_e_categories",
+                    "name": "categories",
+                    "flag": "--categories",
+                    "kind": "file",
+                    "value": "",
+                    "required": true,
+                    "description": "Input from node C",
+                    "exposeAsInput": true
+                  },
+                  {
+                    "id": "p_e_config",
+                    "name": "config",
+                    "flag": "--config",
+                    "kind": "file",
+                    "value": "/home/silvia/workflow_editor/workflow-editor/Demo/advanced_workflow/input/config.txt",
+                    "required": true,
+                    "description": "External validation config"
+                  },
+                  {
+                    "id": "p_e_out",
+                    "name": "out",
+                    "flag": "--out",
+                    "kind": "file",
+                    "value": "out/validation.txt",
+                    "required": true,
+                    "description": "Validation result",
+                    "exposeAsOutput": true
+                  }
+                ],
+                "environment": {
+                  "variables": [],
+                  "modules": [],
+                  "libraries": []
+                },
+                "io": {
+                  "inputs": [
+                    {
+                      "id": "in_e_categories",
+                      "name": "--categories",
+                      "direction": "input",
+                      "dataType": "file",
+                      "inputBind": {
+                        "kind": "param",
+                        "paramId": "p_e_categories"
+                      }
+                    }
+                  ],
+                  "outputs": [
+                    {
+                      "id": "out_e_validation",
+                      "name": "--out",
+                      "direction": "output",
+                      "dataType": "file",
+                      "outputSource": {
+                        "kind": "fromParam",
+                        "paramId": "p_e_out"
+                      }
+                    }
+                  ]
+                },
+                "batch": {
+                  "array": {
+                    "enabled": false
+                  }
+                }
+              }
+            }
+          },
+          "edges": {
+            "edge_b_d": {
+              "id": "edge_b_d",
+              "source": "node_b",
+              "target": "node_d",
+              "sourceHandle": "out_b_normalized",
+              "targetHandle": "in_d_normalized"
+            },
+            "edge_c_e": {
+              "id": "edge_c_e",
+              "source": "node_c",
+              "target": "node_e",
+              "sourceHandle": "out_c_categories",
+              "targetHandle": "in_e_categories"
+            }
+          }
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "sw_in_bcda517cc05bf_1778155341878",
+              "name": "--input",
+              "direction": "input",
+              "dataType": "file"
+            },
+            {
+              "id": "sw_in_2450121a95cff_1778155341878",
+              "name": "--input",
+              "direction": "input",
+              "dataType": "file"
+            }
+          ],
+          "outputs": [
+            {
+              "id": "sw_out_d8efbb043c1a2_1778155341878",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file"
+            },
+            {
+              "id": "sw_out_b0687106bae658_1778155341878",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file"
+            }
+          ]
+        },
+        "boundary": {
+          "inputs": [
+            {
+              "portId": "sw_in_bcda517cc05bf_1778155341878",
+              "targetNodeId": "node_b",
+              "targetPortId": "in_b_products"
+            },
+            {
+              "portId": "sw_in_2450121a95cff_1778155341878",
+              "targetNodeId": "node_c",
+              "targetPortId": "in_c_products"
+            }
+          ],
+          "outputs": [
+            {
+              "portId": "sw_out_d8efbb043c1a2_1778155341878",
+              "sourceNodeId": "node_d",
+              "sourcePortId": "out_d_stats"
+            },
+            {
+              "portId": "sw_out_b0687106bae658_1778155341878",
+              "sourceNodeId": "node_e",
+              "sourcePortId": "out_e_validation"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_f_g": {
+      "id": "edge_f_g",
+      "source": "node_f",
+      "target": "node_g",
+      "sourceHandle": "out_f_summary",
+      "targetHandle": "in_g_summary"
+    },
+    "edge_e4dd978b99813_1778155341878": {
+      "id": "edge_e4dd978b99813_1778155341878",
+      "source": "node_a",
+      "target": "subworkflow_9dd1a9e14e85f8_1778155341878",
+      "sourceHandle": "out_a_products",
+      "targetHandle": "sw_in_bcda517cc05bf_1778155341878"
+    },
+    "edge_801dac802a2358_1778155341878": {
+      "id": "edge_801dac802a2358_1778155341878",
+      "source": "node_a",
+      "target": "subworkflow_9dd1a9e14e85f8_1778155341878",
+      "sourceHandle": "out_a_products",
+      "targetHandle": "sw_in_2450121a95cff_1778155341878"
+    },
+    "edge_f6348da4e4b938_1778155341878": {
+      "id": "edge_f6348da4e4b938_1778155341878",
+      "source": "subworkflow_9dd1a9e14e85f8_1778155341878",
+      "target": "node_f",
+      "sourceHandle": "sw_out_d8efbb043c1a2_1778155341878",
+      "targetHandle": "in_f_stats"
+    },
+    "edge_bc00f7fca5ec9_1778155341878": {
+      "id": "edge_bc00f7fca5ec9_1778155341878",
+      "source": "subworkflow_9dd1a9e14e85f8_1778155341878",
+      "target": "node_f",
+      "sourceHandle": "sw_out_b0687106bae658_1778155341878",
+      "targetHandle": "in_f_validation"
+    }
+  }
+}

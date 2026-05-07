@@ -1,0 +1,10 @@
+{
+  "workflowId": "wf_demo_numbers",
+  "workflowName": "demo_numbers",
+  "backend": "local",
+  "status": "finished",
+  "createdAt": "2026-05-07T12:55:10.782941",
+  "submittedAt": null,
+  "finishedAt": "2026-05-07T12:55:10.846836",
+  "runDir": "/home/silvia/workflow_editor/workflow-editor/runs/demo_numbers_20260507_125510"
+}

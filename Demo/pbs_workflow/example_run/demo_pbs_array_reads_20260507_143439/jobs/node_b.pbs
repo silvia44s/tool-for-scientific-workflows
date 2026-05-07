@@ -1,0 +1,23 @@
+#!/bin/bash
+#PBS -N B_-_Summarize_filtered_reads
+#PBS -o /home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/logs/node_b.log
+#PBS -e /home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/logs/node_b.err
+#PBS -l select=1:ncpus=1:mem=1024mb
+#PBS -l walltime=00:15:00
+#PBS -q workq
+#PBS -A demo
+#PBS -N wf_pbs_summary
+
+set -euo pipefail
+cd "${PBS_O_WORKDIR}"
+
+mkdir -p "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/work/pbs_summarize_reads"
+cd "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/work/pbs_summarize_reads"
+mkdir -p "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/out"
+export LC_ALL=C
+
+# load modules
+ml purge
+ml python/3.11
+
+python3 /home/silvia/workflow_editor/workflow-editor/Demo/pbs_workflow/tools/pbs_summarize_reads.py --filtered-dir /home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/out/filtered_reads --out /home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/out/pbs_read_summary.txt

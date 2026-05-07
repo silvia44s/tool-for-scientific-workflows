@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_demo_pbs_array_reads",
+  "name": "demo_pbs_array_reads",
+  "run": {
+    "resultsRoot": "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results",
+    "backend": "pbs"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_a": {
+      "id": "node_a",
+      "type": "task",
+      "position": {
+        "x": -28.491465140153906,
+        "y": 438.3226172707287
+      },
+      "name": "A - Filter reads as PBS array",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/pbs_workflow/tools/pbs_filter_reads.sh",
+          "workdir": "work/pbs_filter_reads",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_a_input",
+            "name": "input",
+            "flag": "--input",
+            "kind": "file",
+            "value": "/home/silvia/workflow_editor/workflow-editor/Demo/pbs_workflow/input/reads.tsv",
+            "required": true,
+            "description": "External reads table"
+          },
+          {
+            "id": "p_a_outdir",
+            "name": "outdir",
+            "flag": "--outdir",
+            "kind": "directory",
+            "value": "out/filtered_reads",
+            "required": true,
+            "description": "Directory with filtered array outputs",
+            "exposeAsOutput": true
+          },
+          {
+            "id": "p_a_minq",
+            "name": "min-quality",
+            "flag": "--min-quality",
+            "kind": "number",
+            "value": "30",
+            "required": true,
+            "description": "Minimum accepted read quality"
+          },
+          {
+            "id": "p_a_parts",
+            "name": "parts",
+            "flag": "--parts",
+            "kind": "number",
+            "value": "2",
+            "required": true,
+            "description": "Number of PBS array tasks"
+          }
+        ],
+        "environment": {
+          "variables": [
+            {
+              "id": "env1",
+              "key": "LC_ALL",
+              "value": "C"
+            }
+          ],
+          "modules": [
+            "python/3.11"
+          ],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_a_filtered",
+              "name": "--outdir",
+              "direction": "output",
+              "dataType": "directory",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p_a_outdir"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 512,
+          "timeMin": 10,
+          "partitionOrQueue": "workq",
+          "account": "demo",
+          "array": {
+            "enabled": true,
+            "start": 1,
+            "end": 2,
+            "step": 1
+          },
+          "customDirectives": "#PBS -N wf_pbs_filter"
+        }
+      }
+    },
+    "node_b": {
+      "id": "node_b",
+      "type": "task",
+      "position": {
+        "x": 694.0778093644002,
+        "y": 392.73627304648244
+      },
+      "name": "B - Summarize filtered reads",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/pbs_workflow/tools/pbs_summarize_reads.py",
+          "workdir": "work/pbs_summarize_reads",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_b_filtered",
+            "name": "filtered-dir",
+            "flag": "--filtered-dir",
+            "kind": "directory",
+            "value": "",
+            "required": true,
+            "description": "Directory from node A",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p_b_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/pbs_read_summary.txt",
+            "required": true,
+            "description": "Final read summary",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [
+            {
+              "id": "env1",
+              "key": "LC_ALL",
+              "value": "C"
+            }
+          ],
+          "modules": [
+            "python/3.11"
+          ],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_b_filtered",
+              "name": "--filtered-dir",
+              "direction": "input",
+              "dataType": "directory",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p_b_filtered"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_b_summary",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p_b_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 1024,
+          "timeMin": 15,
+          "partitionOrQueue": "workq",
+          "account": "demo",
+          "array": {
+            "enabled": false
+          },
+          "customDirectives": "#PBS -N wf_pbs_summary"
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_a_b": {
+      "id": "edge_a_b",
+      "source": "node_a",
+      "target": "node_b",
+      "sourceHandle": "out_a_filtered",
+      "targetHandle": "in_b_filtered"
+    }
+  }
+}

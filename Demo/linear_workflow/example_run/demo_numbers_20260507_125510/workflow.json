@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_demo_numbers",
+  "name": "demo_numbers",
+  "run": {
+    "resultsRoot": "/home/silvia/workflow_editor/workflow-editor/runs/demo_numbers_20260507_125510/results",
+    "backend": "local"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_1": {
+      "id": "node_1",
+      "type": "task",
+      "position": {
+        "x": -64.67820244890896,
+        "y": 230.51974718970098
+      },
+      "name": "Generate numbers",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/linear_workflow/tools/gen_numbers.py",
+          "workdir": "work/gen_numbers",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p1_start",
+            "name": "start",
+            "flag": "--start",
+            "kind": "number",
+            "value": "1",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p1_end",
+            "name": "end",
+            "flag": "--end",
+            "kind": "number",
+            "value": "5",
+            "required": true,
+            "description": ""
+          },
+          {
+            "id": "p1_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/numbers.txt",
+            "required": true,
+            "description": "",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_p1_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p1_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_2": {
+      "id": "node_2",
+      "type": "task",
+      "position": {
+        "x": 739.4800935630991,
+        "y": 358.21773664011084
+      },
+      "name": "Multiply numbers",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/linear_workflow/tools/multiply_numbers.py",
+          "workdir": "work/multiply",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p2_in",
+            "name": "input",
+            "flag": "--input",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p2_factor",
+            "name": "factor",
+            "flag": "--factor",
+            "kind": "number",
+            "value": "10",
+            "required": true,
+            "description": "External user-provided multiplier"
+          },
+          {
+            "id": "p2_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/multiplied.txt",
+            "required": true,
+            "description": "",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_p2_in",
+              "name": "--input",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p2_in"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_p2_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p2_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_1": {
+      "id": "edge_1",
+      "source": "node_1",
+      "target": "node_2",
+      "sourceHandle": "out_p1_out",
+      "targetHandle": "in_p2_in"
+    }
+  }
+}

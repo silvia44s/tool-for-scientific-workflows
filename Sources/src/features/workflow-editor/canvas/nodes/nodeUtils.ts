@@ -20,9 +20,9 @@ import type { PortDataType } from '../../../../domain/workflow/model/model';
 export function getPortColor(type: PortDataType): string {
   switch (type) {
     case 'file':
-      return '#07db86';
+      return '#007de3';
     case 'directory':
-      return '#83f90c';
+      return '#960cf9';
     case 'string':
       return '#0070f0';
     case 'number':

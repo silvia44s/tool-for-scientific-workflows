@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -N A_-_Filter_reads_as_PBS_array
+#PBS -o /home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/logs/node_a.log
+#PBS -e /home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/logs/node_a.err
+#PBS -l select=1:ncpus=1:mem=512mb
+#PBS -l walltime=00:10:00
+#PBS -q workq
+#PBS -A demo
+#PBS -J 1-2:1
+#PBS -N wf_pbs_filter
+
+set -euo pipefail
+cd "${PBS_O_WORKDIR}"
+
+mkdir -p "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/work/pbs_filter_reads"
+cd "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/work/pbs_filter_reads"
+mkdir -p "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/out"
+export LC_ALL=C
+
+# load modules
+ml purge
+ml python/3.11
+
+/home/silvia/workflow_editor/workflow-editor/Demo/pbs_workflow/tools/pbs_filter_reads.sh --input /home/silvia/workflow_editor/workflow-editor/Demo/pbs_workflow/input/reads.tsv --outdir /home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439/results/out/filtered_reads --min-quality 30 --parts 2

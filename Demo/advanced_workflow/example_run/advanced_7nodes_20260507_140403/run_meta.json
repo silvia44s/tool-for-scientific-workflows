@@ -1,0 +1,10 @@
+{
+  "workflowId": "wf_advanced_7nodes",
+  "workflowName": "advanced_7nodes",
+  "backend": "local",
+  "status": "finished",
+  "createdAt": "2026-05-07T14:04:03.851747",
+  "submittedAt": null,
+  "finishedAt": "2026-05-07T14:04:04.037947",
+  "runDir": "/../workflow-editor/runs/advanced_7nodes_20260507_140403"
+}

@@ -1,0 +1,6 @@
+records=6
+total_sales=70.70
+category_bakery=11.50
+category_dairy=12.00
+category_fruit=24.00
+category_vegetable=23.20

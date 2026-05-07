@@ -1,0 +1,10 @@
+{
+  "workflowId": "wf_demo_pbs_array_reads",
+  "workflowName": "demo_pbs_array_reads",
+  "backend": "pbs",
+  "status": "scripts_generated",
+  "createdAt": "2026-05-07T14:34:39.884463",
+  "submittedAt": null,
+  "finishedAt": null,
+  "runDir": "/home/silvia/workflow_editor/workflow-editor/runs/demo_pbs_array_reads_20260507_143439"
+}

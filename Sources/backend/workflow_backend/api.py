@@ -58,7 +58,8 @@ app.add_middleware(
 )
 
 # directory where workflow runs will be stored
-RUNS_ROOT = Path("runs").resolve()
+BASE_DIR = Path(__file__).resolve().parents[2]
+RUNS_ROOT = (BASE_DIR.parent / "runs").resolve()
 
 # create it if it does not exist yet
 RUNS_ROOT.mkdir(parents=True, exist_ok=True)
