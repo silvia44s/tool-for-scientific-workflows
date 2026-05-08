@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_demo_branched_abcd",
+  "name": "demo_branched_abcd",
+  "run": {
+    "resultsRoot": "/home/silvia/workflow_editor/workflow-editor/runs/demo_branched_abcd_20260507_132700/results",
+    "backend": "local"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_a": {
+      "id": "node_a",
+      "type": "task",
+      "position": {
+        "x": -379.7771374564138,
+        "y": 347.84651139706733
+      },
+      "name": "A - Generate numbers",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/linear_workflow/tools/gen_numbers.py",
+          "workdir": "work/node_a_generate_numbers",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "pa_start",
+            "name": "start",
+            "flag": "--start",
+            "kind": "number",
+            "value": "1",
+            "required": true,
+            "description": "First generated number"
+          },
+          {
+            "id": "pa_end",
+            "name": "end",
+            "flag": "--end",
+            "kind": "number",
+            "value": "5",
+            "required": true,
+            "description": "Last generated number"
+          },
+          {
+            "id": "pa_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/numbers.txt",
+            "required": true,
+            "description": "Generated numbers",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_pa_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "pa_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_b": {
+      "id": "node_b",
+      "type": "task",
+      "position": {
+        "x": 345.8663780221683,
+        "y": 121.65841544740792
+      },
+      "name": "B - Multiply numbers",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/linear_workflow/tools/multiply_numbers.py",
+          "workdir": "work/node_b_multiply_numbers",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "pb_input",
+            "name": "input",
+            "flag": "--input",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input from node A",
+            "exposeAsInput": true
+          },
+          {
+            "id": "pb_factor",
+            "name": "factor",
+            "flag": "--factor",
+            "kind": "number",
+            "value": "10",
+            "required": true,
+            "description": "Multiplier"
+          },
+          {
+            "id": "pb_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/multiplied.txt",
+            "required": true,
+            "description": "Multiplied numbers",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_pb_input",
+              "name": "--input",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "pb_input"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_pb_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "pb_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_c": {
+      "id": "node_c",
+      "type": "task",
+      "position": {
+        "x": 339.2327162325367,
+        "y": 635.5445008474771
+      },
+      "name": "C - Add external offsets",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/branched_workflow/tools/node_c_add_external_offsets.py",
+          "workdir": "work/node_c_add_external_offsets",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "pc_input",
+            "name": "input",
+            "flag": "--input",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input from node A",
+            "exposeAsInput": true
+          },
+          {
+            "id": "pc_offsets",
+            "name": "offsets",
+            "flag": "--offsets",
+            "kind": "file",
+            "value": "/home/silvia/workflow_editor/workflow-editor/Demo/branched_workflow/input/offsets.txt",
+            "required": true,
+            "description": "External input file stored in Demo/branched_workflow/input"
+          },
+          {
+            "id": "pc_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/offset_added.txt",
+            "required": true,
+            "description": "Numbers after adding offsets",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_pc_input",
+              "name": "--input",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "pc_input"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_pc_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "pc_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    "node_d": {
+      "id": "node_d",
+      "type": "task",
+      "position": {
+        "x": 1050.5483640314005,
+        "y": 311.5321235165041
+      },
+      "name": "D - Merge B and C",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/branched_workflow/tools/node_d_merge_results.py",
+          "workdir": "work/node_d_merge_results",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "pd_left",
+            "name": "left",
+            "flag": "--left",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input from node B",
+            "exposeAsInput": true
+          },
+          {
+            "id": "pd_right",
+            "name": "right",
+            "flag": "--right",
+            "kind": "file",
+            "value": "",
+            "required": true,
+            "description": "Input from node C",
+            "exposeAsInput": true
+          },
+          {
+            "id": "pd_operation",
+            "name": "operation",
+            "flag": "--operation",
+            "kind": "string",
+            "value": "sum",
+            "required": true,
+            "description": "How to merge values: sum, difference, or product"
+          },
+          {
+            "id": "pd_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/final_result.txt",
+            "required": true,
+            "description": "Final merged result",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_pd_left",
+              "name": "--left",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "pd_left"
+              }
+            },
+            {
+              "id": "in_pd_right",
+              "name": "--right",
+              "direction": "input",
+              "dataType": "file",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "pd_right"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_pd_out",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "pd_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "array": {
+            "enabled": false
+          }
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_a_b": {
+      "id": "edge_a_b",
+      "source": "node_a",
+      "target": "node_b",
+      "sourceHandle": "out_pa_out",
+      "targetHandle": "in_pb_input"
+    },
+    "edge_a_c": {
+      "id": "edge_a_c",
+      "source": "node_a",
+      "target": "node_c",
+      "sourceHandle": "out_pa_out",
+      "targetHandle": "in_pc_input"
+    },
+    "edge_b_d": {
+      "id": "edge_b_d",
+      "source": "node_b",
+      "target": "node_d",
+      "sourceHandle": "out_pb_out",
+      "targetHandle": "in_pd_left"
+    },
+    "edge_c_d": {
+      "id": "edge_c_d",
+      "source": "node_c",
+      "target": "node_d",
+      "sourceHandle": "out_pc_out",
+      "targetHandle": "in_pd_right"
+    }
+  }
+}

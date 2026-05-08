@@ -1,0 +1,10 @@
+{
+  "workflowId": "wf_demo_slurm_array_stats",
+  "workflowName": "demo_slurm_array_stats",
+  "backend": "slurm",
+  "status": "remote_upload_failed",
+  "createdAt": "2026-05-07T22:59:09.748891",
+  "submittedAt": null,
+  "finishedAt": null,
+  "runDir": "/home/silvia/workflow_editor/workflow-editor/runs/demo_slurm_array_stats_20260507_225909"
+}

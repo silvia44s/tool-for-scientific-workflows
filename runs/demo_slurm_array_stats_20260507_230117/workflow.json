@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "id": "wf_demo_slurm_array_stats",
+  "name": "demo_slurm_array_stats",
+  "run": {
+    "resultsRoot": "/home/silvia/workflow_editor/workflow-editor/runs/demo_slurm_array_stats_20260507_230117/results",
+    "backend": "slurm"
+  },
+  "canvas": {
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    }
+  },
+  "nodes": {
+    "node_a": {
+      "id": "node_a",
+      "type": "task",
+      "position": {
+        "x": 47.668439780977735,
+        "y": 379.61159158284426
+      },
+      "name": "A - Split samples as SLURM array",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/slurm_workflow/tools/slurm_prepare_chunk.sh",
+          "workdir": "work/slurm_prepare_chunk",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_a_input",
+            "name": "input",
+            "flag": "--input",
+            "kind": "file",
+            "value": "/home/silvia/workflow_editor/workflow-editor/Demo/slurm_workflow/input/samples.tsv",
+            "required": true,
+            "description": "External TSV input"
+          },
+          {
+            "id": "p_a_outdir",
+            "name": "outdir",
+            "flag": "--outdir",
+            "kind": "directory",
+            "value": "out/chunks",
+            "required": true,
+            "description": "Directory with array chunk outputs",
+            "exposeAsOutput": true
+          },
+          {
+            "id": "p_a_chunks",
+            "name": "chunks",
+            "flag": "--chunks",
+            "kind": "number",
+            "value": "3",
+            "required": true,
+            "description": "Number of SLURM array tasks"
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [
+            "python/3.11"
+          ],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "out_a_chunks",
+              "name": "--outdir",
+              "direction": "output",
+              "dataType": "directory",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p_a_outdir"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 512,
+          "timeMin": 10,
+          "partitionOrQueue": "short",
+          "account": "demo",
+          "qos": "normal",
+          "array": {
+            "enabled": true,
+            "start": 1,
+            "end": 3,
+            "step": 1
+          },
+          "customDirectives": "#SBATCH --job-name=wf_slurm_split"
+        }
+      }
+    },
+    "node_b": {
+      "id": "node_b",
+      "type": "task",
+      "position": {
+        "x": 679.5855497262222,
+        "y": 251.50265967146657
+      },
+      "name": "B - Merge SLURM chunk statistics",
+      "task": {
+        "config": {
+          "binaryPath": "/home/silvia/workflow_editor/workflow-editor/Demo/slurm_workflow/tools/slurm_merge_stats.py",
+          "workdir": "work/slurm_merge_stats",
+          "argsTemplate": ""
+        },
+        "params": [
+          {
+            "id": "p_b_chunks",
+            "name": "chunks",
+            "flag": "--chunks",
+            "kind": "directory",
+            "value": "",
+            "required": true,
+            "description": "Directory from node A",
+            "exposeAsInput": true
+          },
+          {
+            "id": "p_b_out",
+            "name": "out",
+            "flag": "--out",
+            "kind": "file",
+            "value": "out/slurm_summary.txt",
+            "required": true,
+            "description": "Final summary",
+            "exposeAsOutput": true
+          }
+        ],
+        "environment": {
+          "variables": [],
+          "modules": [
+            "python/3.11"
+          ],
+          "libraries": []
+        },
+        "io": {
+          "inputs": [
+            {
+              "id": "in_b_chunks",
+              "name": "--chunks",
+              "direction": "input",
+              "dataType": "directory",
+              "inputBind": {
+                "kind": "param",
+                "paramId": "p_b_chunks"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "out_b_summary",
+              "name": "--out",
+              "direction": "output",
+              "dataType": "file",
+              "outputSource": {
+                "kind": "fromParam",
+                "paramId": "p_b_out"
+              }
+            }
+          ]
+        },
+        "batch": {
+          "cpus": 1,
+          "memMB": 1024,
+          "timeMin": 15,
+          "partitionOrQueue": "short",
+          "account": "demo",
+          "array": {
+            "enabled": false
+          },
+          "customDirectives": "#SBATCH --job-name=wf_slurm_merge"
+        }
+      }
+    }
+  },
+  "edges": {
+    "edge_a_b": {
+      "id": "edge_a_b",
+      "source": "node_a",
+      "target": "node_b",
+      "sourceHandle": "out_a_chunks",
+      "targetHandle": "in_b_chunks"
+    }
+  }
+}

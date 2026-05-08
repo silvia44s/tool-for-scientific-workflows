@@ -1,0 +1,10 @@
+{
+  "workflowId": "wf_demo_branched_abcd",
+  "workflowName": "demo_branched_abcd",
+  "backend": "local",
+  "status": "failed",
+  "createdAt": "2026-05-07T13:27:00.182039",
+  "submittedAt": null,
+  "finishedAt": "2026-05-07T13:27:00.256972",
+  "runDir": "/home/silvia/workflow_editor/workflow-editor/runs/demo_branched_abcd_20260507_132700"
+}
