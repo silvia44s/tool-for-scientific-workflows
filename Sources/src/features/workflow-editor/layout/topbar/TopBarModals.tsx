@@ -6,6 +6,7 @@
 
 import styles from './TopBar.module.css';
 import type { RunErrorInfo, SubmitPromptInfo } from './topBarTypes';
+import { useState } from 'react';
 
 type TopBarModalsProps = {
   runError: RunErrorInfo | null;
@@ -67,6 +68,7 @@ export function TopBarModals({
   onImportJson,
   onStartEmpty,
 }: TopBarModalsProps) {
+  const [showRemoteUploadForm, setShowRemoteUploadForm] = useState(false);
   return (
     <>
       {runError && (
@@ -127,7 +129,10 @@ export function TopBarModals({
         <div
           className={styles.modalOverlay}
           onClick={() => {
-            if (!isSubmitting) setSubmitPrompt(null);
+            if (!isSubmitting) {
+              setShowRemoteUploadForm(false);
+              setSubmitPrompt(null);
+            }
           }}
         >
           <div
@@ -143,7 +148,10 @@ export function TopBarModals({
                 type="button"
                 className={styles.modalCloseBtn}
                 onClick={() => {
-                  if (!isSubmitting) setSubmitPrompt(null);
+                  if (!isSubmitting) {
+                    setShowRemoteUploadForm(false);
+                    setSubmitPrompt(null);
+                  }
                 }}
                 disabled={isSubmitting}
               >
@@ -152,14 +160,17 @@ export function TopBarModals({
             </div>
             <div className={styles.modalBody}>
               <p className={styles.modalMessage}>
-                Workflow scripts were generated successfully. You can download them
-                or upload them to a remote server.
+                Workflow scripts were generated successfully.
+                <br />
+                You can download them or upload them to a remote server.
               </p>
 
-              <div className={styles.modalMeta}>
+              {/*<div className={styles.modalMeta}>
                 <strong>Run dir:</strong> {submitPrompt.runDir}
-              </div>
+              </div>*/}
 
+              {showRemoteUploadForm && (
+              <>
               <div className={styles.modalSectionLabel}>Remote upload</div>
 
               <div className={styles.modalFieldsSection}>
@@ -223,6 +234,8 @@ export function TopBarModals({
                   />
                 </div>
               </div>
+              </>
+              )}
             </div>
             <div className={styles.modalFooter}>
               <button
@@ -243,19 +256,30 @@ export function TopBarModals({
                 Download scripts
               </button>
 
-              <button
-                type="button"
-                className={styles.modalOkBtn}
-                onClick={onUploadBatch}
-                disabled={
-                  isSubmitting ||
-                  !remoteHost.trim() ||
-                  !remoteUser.trim() ||
-                  !remotePath.trim()
-                }
-              >
-                {isSubmitting ? 'UPLOADING...' : 'Upload to remote server'}
-              </button>
+              {showRemoteUploadForm ? (
+                <button
+                  type="button"
+                  className={styles.modalOkBtn}
+                  onClick={onUploadBatch}
+                  disabled={
+                    isSubmitting ||
+                    !remoteHost.trim() ||
+                    !remoteUser.trim() ||
+                    !remotePath.trim()
+                  }
+                >
+                  {isSubmitting ? 'UPLOADING...' : 'Upload to remote server'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.modalOkBtn}
+                  onClick={() => setShowRemoteUploadForm(true)}
+                  disabled={isSubmitting}
+                >
+                  Remote upload
+                </button>
+              )}
             </div>
           </div>
         </div>

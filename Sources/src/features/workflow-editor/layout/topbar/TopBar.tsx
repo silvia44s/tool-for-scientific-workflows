@@ -12,7 +12,7 @@
  *
  */
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import styles from './TopBar.module.css';
 import { useWorkflow } from '../../provider/useWorkflow';
 import {
@@ -42,6 +42,11 @@ import {
 import { exportWorkflowAsCwl } from '../../../../export/cwl';
 import { downloadCwlBundleZip } from '../../../../export/cwl/downloadBundle';
 
+import {
+  loadRemoteUploadSettings,
+  saveRemoteUploadSettings,
+} from '../../provider/remoteUploadStorage';
+
 /**
  * @brief Main toolbar component displayed above the workflow canvas.
  */
@@ -52,11 +57,22 @@ export function TopBar() {
   const [submitPrompt, setSubmitPrompt] = useState<SubmitPromptInfo | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
 
-  const [remoteHost, setRemoteHost] = useState('');
-  const [remoteUser, setRemoteUser] = useState('');
-  const [remotePath, setRemotePath] = useState('');
-  const [remoteKeyPath, setRemoteKeyPath] = useState('');
+  const savedRemoteSettings = loadRemoteUploadSettings();
+
+  const [remoteHost, setRemoteHost] = useState(savedRemoteSettings.remoteHost);
+  const [remoteUser, setRemoteUser] = useState(savedRemoteSettings.remoteUser);
+  const [remotePath, setRemotePath] = useState(savedRemoteSettings.remotePath);
+  const [remoteKeyPath, setRemoteKeyPath] = useState(savedRemoteSettings.remoteKeyPath);
   const [remoteKeyPassphrase, setRemoteKeyPassphrase] = useState('');
+
+  useEffect(() => {
+    saveRemoteUploadSettings({
+      remoteHost,
+      remoteUser,
+      remotePath,
+      remoteKeyPath,
+    });
+  }, [remoteHost, remoteUser, remotePath, remoteKeyPath]);
 
   const { state, dispatch, canUndo, canRedo, isDirty, markSaved } = useWorkflow();
   const fileRef = useRef<HTMLInputElement | null>(null);
